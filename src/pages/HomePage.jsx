@@ -5,10 +5,10 @@ import { showErrorMsg, showSuccessMsg } from '../services/event-bus.service'
 import { useUser } from '../store/UserContext'
 import { Link } from 'react-router-dom'
 import { SearchPreferencesForm } from '../cmps/SearchPreferencesForm'
-import { StatusPanel } from '../cmps/StatusPanel'
 import { SchedulePanel } from '../cmps/SchedulePanel'
 import { DealsList } from '../cmps/DealsList'
 import { parseList, generateDatesBetween, filterDeals } from '../services/deals.utils'
+import { io } from 'socket.io-client'
 
 export function HomePage() {
   const { user, setUser } = useUser()
@@ -29,7 +29,6 @@ export function HomePage() {
   const [deals, setDeals] = useState([])
   const [loadingStatus, setLoadingStatus] = useState(false)
   const [running, setRunning] = useState(false)
-  const [savingCfg, setSavingCfg] = useState(false)
   const [updatingSchedule, setUpdatingSchedule] = useState(false)
 
   const configPayload = useMemo(() => normalizeConfig(configForm), [configForm])
@@ -42,6 +41,27 @@ export function HomePage() {
     refreshDeals()
     refreshSchedule()
   }, [user])
+  
+  useEffect(() => {
+  if (!user) return
+
+  const baseUrl = import.meta.env.VITE_DEALS_API_URL || 'http://localhost:3030'
+
+  const socket = io(baseUrl, {
+    withCredentials: true,
+  })
+
+  socket.on('connect', () => {
+    if (user?._id) socket.emit('register-user', user._id)
+  })
+
+  socket.on('deals:update', (payload) => {
+    const hits = Array.isArray(payload?.hits) ? payload.hits.filter(Boolean) : []
+    if (hits.length) setDeals(hits)
+  })
+
+  return () => socket.disconnect()
+}, [user])
 
   function handleConfigChange(ev) {
     const { name, value } = ev.target
@@ -135,6 +155,8 @@ export function HomePage() {
 
 
   async function onRun() {
+      console.log('onRun clicked, configPayload =', configPayload)
+
     setRunning(true)
     try {
       await savePreferences()
@@ -156,8 +178,21 @@ export function HomePage() {
   async function onStartSchedule() {
     setUpdatingSchedule(true)
     try {
+      await savePreferences()
+
       const res = await dealsService.startSchedule(configPayload)
       if (res?.ok === false) throw new Error(res.error || 'Schedule failed')
+
+      const firstHits = Array.isArray(res?.firstRun?.hits)
+        ? res.firstRun.hits.filter(Boolean)
+        : []
+
+      if (firstHits.length) {
+        setDeals(firstHits)
+      } else {
+        await refreshDeals()
+      }
+
       showSuccessMsg('Scheduler started')
       await refreshSchedule()
     } catch (err) {
@@ -223,14 +258,11 @@ export function HomePage() {
         onRun={onRun}
         onStartSchedule={onStartSchedule}
         onStopSchedule={onStopSchedule}
-        savingCfg={savingCfg}
         running={running}
         updatingSchedule={updatingSchedule}
         scheduleSupported={scheduleSupported}
         canStartSchedule={!!configPayload.intervalMinutes}
       />
-
-      <StatusPanel status={status} loading={loadingStatus} onRefresh={refreshStatus} />
 
       <SchedulePanel
         schedule={schedule}

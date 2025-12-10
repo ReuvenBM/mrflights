@@ -52,10 +52,10 @@ export function SearchPreferencesForm({
             <span className="hint">Add at least one date</span>
           )}
         </div>
-        <label>
+        {/* <label>
           Currency
           <input name="currency" value={configForm.currency} onChange={onChange} />
-        </label>
+        </label> */}
         <div className="triple">
           <label>
             Max nonstop $
