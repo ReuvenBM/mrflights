@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState , useRef} from 'react'
 import { dealsService } from '../services/deals.service'
 import { userService } from '../services/user.service'
 import { showErrorMsg, showSuccessMsg } from '../services/event-bus.service'
@@ -35,33 +35,39 @@ export function HomePage() {
   const datesList = useMemo(() => (Array.isArray(configForm.dates) ? configForm.dates : parseList(configForm.dates)), [configForm.dates])
   const matchingDeals = useMemo(() => filterDeals(deals, configPayload), [deals, configPayload])
 
+
+
   useEffect(() => {
     if (!user) return
     refreshStatus()
     refreshDeals()
     refreshSchedule()
   }, [user])
-  
+
   useEffect(() => {
-  if (!user) return
+    if (!user) return
 
-  const baseUrl = import.meta.env.VITE_DEALS_API_URL || 'http://localhost:3030'
+    const baseUrl = import.meta.env.VITE_DEALS_API_URL || 'http://localhost:3030'
 
-  const socket = io(baseUrl, {
-    withCredentials: true,
-  })
+    const socket = io(baseUrl, {
+      withCredentials: true,
+    })
 
-  socket.on('connect', () => {
-    if (user?._id) socket.emit('register-user', user._id)
-  })
+    socket.on('connect', () => {
+      if (user?._id) socket.emit('register-user', user._id)
+    })
 
-  socket.on('deals:update', (payload) => {
-    const hits = Array.isArray(payload?.hits) ? payload.hits.filter(Boolean) : []
-    if (hits.length) setDeals(hits)
-  })
+    socket.on('deals:update', (payload) => {
+      console.log('arrived socket')
+      console.log(payload)
+      const hits = Array.isArray(payload?.hits) ? payload.hits.filter(Boolean) : []
+      console.log(hits)
+      console.log(hits.length)
+      if (hits.length) setDeals(hits)
+    })
 
-  return () => socket.disconnect()
-}, [user])
+    return () => socket.disconnect()
+  }, [user])
 
   function handleConfigChange(ev) {
     const { name, value } = ev.target
@@ -155,7 +161,7 @@ export function HomePage() {
 
 
   async function onRun() {
-      console.log('onRun clicked, configPayload =', configPayload)
+    console.log('onRun clicked, configPayload =', configPayload)
 
     setRunning(true)
     try {

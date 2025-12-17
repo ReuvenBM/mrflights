@@ -64,3 +64,46 @@ export function formatVal(val) {
   }
   return String(val)
 }
+// Build a smart outbound link for a specific flight deal
+// Tries airline direct search, falls back to Google Flights
+export function buildFlightLink(deal) {
+  if (!deal) return null
+
+  const { origin, dest, date, carriers } = deal
+  if (!origin || !dest || !date) return null
+
+  const ymd = String(date).slice(0, 10)
+
+  // Infer primary carrier code (first two-letter code)
+  const carrierCode = (carriers || '').split(',')[0]?.trim()?.slice(0, 2)
+
+  const airlineLinks = {
+    LY: (o, d, dt) =>
+      `https://www.elal.com/flight-search?departure=${o}&arrival=${d}&departureDate=${dt}`,
+    TK: (o, d, dt) =>
+      `https://www.turkishairlines.com/en-int/flights/booking/?origin=${o}&destination=${d}&departureDate=${dt}`,
+    EK: (o, d, dt) =>
+      `https://www.emirates.com/booking/search-flight/?from=${o}&to=${d}&departureDate=${dt}`,
+    QR: (o, d, dt) =>
+      `https://www.qatarairways.com/app/booking/flight-selection?fromStation=${o}&toStation=${d}&outboundDate=${dt}`,
+    LH: (o, d, dt) =>
+      `https://www.lufthansa.com/booking/flight-selection?origin=${o}&destination=${d}&outboundDate=${dt}`,
+    AF: (o, d, dt) =>
+      `https://wwws.airfrance.co.il/search?from=${o}&to=${d}&date=${dt}`,
+    KL: (o, d, dt) =>
+      `https://www.klm.co.il/search?from=${o}&to=${d}&date=${dt}`,
+  }
+
+  if (carrierCode && airlineLinks[carrierCode]) {
+    return {
+      url: airlineLinks[carrierCode](origin, dest, ymd),
+      label: 'Continue on Airline site',
+      source: carrierCode,
+    }
+  }
+
+  const curr = (deal.currency || 'USD').toString().trim()
+  const q = `Flights from ${origin} to ${dest} on ${ymd} oneway`
+  const gf = `https://www.google.com/travel/flights?q=${encodeURIComponent(q)}&curr=${encodeURIComponent(curr)}`
+  return { url: gf, label: 'Show in google flights', source: 'GF' }
+}

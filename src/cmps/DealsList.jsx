@@ -1,11 +1,11 @@
-import { dealDate, safeText } from '../services/deals.utils'
+import { dealDate, safeText, buildFlightLink } from '../services/deals.utils'
 
 export function DealsList({ title, deals, onReload }) {
   return (
     <section className="panel">
       <header className="panel-header">
         <h2>{title}</h2>
-        <button onClick={onReload}>Reload</button>
+        {/* <button onClick={onReload}>Reload</button> */}
       </header>
       {(!deals || deals.length === 0) && <p>No deals yet</p>}
       {deals?.map((d) => (
@@ -27,8 +27,21 @@ export function DealsList({ title, deals, onReload }) {
             <div>Arr: {safeText(d.arr)}</div>
           </div>
           <div className="legs">{safeText(d.legs)}</div>
+          {(() => {
+            const link = buildFlightLink(d)
+            if (!link) return null
+
+            return (
+              <div className="cta">
+                <a href={link.url} target="_blank" rel="noreferrer">
+                  {link.label}
+                </a>
+              </div>
+            )
+          })()}
         </article>
       ))}
     </section>
   )
 }
+
