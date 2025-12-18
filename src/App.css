@@ -281,10 +281,120 @@ button:disabled {
   #root {
     padding: 16px;
   }
+
   .actions {
     flex-wrap: wrap;
   }
+
   .app-header nav {
     gap: 6px;
   }
+}
+
+/* AirportMultiSelect */
+
+.airport-multiselect {
+  margin-top: 6px;
+}
+
+.airport-multiselect .chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.airport-multiselect .chips:focus-within {
+  border-color: rgba(0, 0, 0, 0.28);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+}
+
+.airport-multiselect .chips input {
+  flex: 1 1 180px;
+  min-width: 180px;
+  border: 0;
+  outline: none;
+  padding: 8px 6px;
+  background: transparent;
+  font-size: 14px;
+}
+
+.airport-multiselect .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.03);
+  font-size: 13px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.airport-multiselect .chip button {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+}
+
+.airport-multiselect .chip button:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.airport-multiselect .airport-suggestions {
+  margin-top: 10px;
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 6px;
+}
+
+.airport-multiselect .suggestion {
+  width: 100%;
+  text-align: left;
+  padding: 10px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1.2;
+  color: #111827;
+
+}
+
+.airport-multiselect .suggestion:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.airport-multiselect .suggestion:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.airport-multiselect .hint {
+  margin-top: 8px;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.airport-multiselect .hint.error {
+  opacity: 1;
+  font-weight: 600;
 }
