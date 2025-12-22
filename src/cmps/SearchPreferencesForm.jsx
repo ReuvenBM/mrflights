@@ -36,8 +36,6 @@ export function SearchPreferencesForm({
           />
         </div>
 
-
-
         <label>
           Destinations
         </label>

@@ -25,12 +25,20 @@
   gap: 12px;
 }
 
-.app-header .brand a {
-  font-size: 20px;
-  font-weight: 800;
-  text-decoration: none;
-  color: #0b1620;
+.app-header .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: larger;
+  background: none;
 }
+
+.app-header .brand a {
+  padding: 0;
+  border-radius: 0;
+  border: none;
+}
+
 
 .app-header nav {
   display: flex;
@@ -379,6 +387,7 @@ button:disabled {
 
 }
 
+
 .airport-multiselect .suggestion:hover {
   background: rgba(0, 0, 0, 0.06);
 }
@@ -397,4 +406,24 @@ button:disabled {
 .airport-multiselect .hint.error {
   opacity: 1;
   font-weight: 600;
+}
+.app-header .brand img {
+  height: 32px; 
+  width: auto;
+  object-fit: contain;
+}
+.app-header .brand-link {
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.app-header .brand-link.active {
+  background: transparent;
+  border-color: transparent;
 }
