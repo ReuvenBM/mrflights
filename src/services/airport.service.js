@@ -2,7 +2,6 @@
 
 export const AIRPORT_OPTIONS = [
   { code: 'TLV', label: 'Tel Aviv, Israel' },
-  { code: 'JRS', label: 'Jerusalem, Israel' },
   { code: 'HFA', label: 'Haifa, Israel' },
   { code: 'ETH', label: 'Eilat (Ramon), Israel' },
   { code: 'LCA', label: 'Larnaca, Cyprus' },
@@ -34,6 +33,28 @@ export const AIRPORT_OPTIONS = [
   { code: 'JFK', label: 'New York (JFK), USA' },
   { code: 'EWR', label: 'Newark, USA' },
   { code: 'LAX', label: 'Los Angeles, USA' },
+  { code: 'SFO', label: 'San Francisco, USA' },
+  { code: 'ORD', label: "Chicago (O'Hare), USA" },
+  { code: 'ATL', label: 'Atlanta, USA' },
+  { code: 'DFW', label: 'Dallas/Fort Worth, USA' },
+  { code: 'MIA', label: 'Miami, USA' },
+  { code: 'BOS', label: 'Boston, USA' },
+  { code: 'SEA', label: 'Seattle, USA' },
+  { code: 'DEN', label: 'Denver, USA' },
+  { code: 'LAS', label: 'Las Vegas, USA' },
+  { code: 'YYZ', label: 'Toronto, Canada' },
+  { code: 'YUL', label: 'Montreal, Canada' },
+  { code: 'DUB', label: 'Dublin, Ireland' },
+  { code: 'LIS', label: 'Lisbon, Portugal' },
+  { code: 'OPO', label: 'Porto, Portugal' },
+  { code: 'BRU', label: 'Brussels, Belgium' },
+  { code: 'VIE', label: 'Vienna, Austria' },
+  { code: 'ARN', label: 'Stockholm, Sweden' },
+  { code: 'CPH', label: 'Copenhagen, Denmark' },
+  { code: 'OSL', label: 'Oslo, Norway' },
+  { code: 'HKG', label: 'Hong Kong' },
+  { code: 'SYD', label: 'Sydney, Australia' },
+  { code: 'MEL', label: 'Melbourne, Australia' },
 ]
 
 export function getAirportOptions() {
