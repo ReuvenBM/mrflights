@@ -1,6 +1,6 @@
 import { dealDate, safeText, buildFlightLink } from '../services/deals.utils'
 
-export function DealsList({ title, deals, onReload }) {
+export function DealsList({ title, deals}) {
   return (
     <section className="panel">
       <header className="panel-header">
@@ -28,20 +28,19 @@ export function DealsList({ title, deals, onReload }) {
           </div>
           <div className="legs">{safeText(d.legs)}</div>
           {(() => {
-            const link = buildFlightLink(d)
-            if (!link) return null
+            const links = buildFlightLink(d)
+            if (!links || links.length === 0) return null
 
-            return (
-              <div className="cta">
+            return links.map((link) => (
+              <div className="cta" key={`${d.key || `${dealDate(d)}-${d.dep || d.date || ''}`}-${link.source}`}>
                 <a href={link.url} target="_blank" rel="noreferrer">
                   {link.label}
                 </a>
               </div>
-            )
+            ))
           })()}
         </article>
       ))}
     </section>
   )
 }
-

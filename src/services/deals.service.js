@@ -20,7 +20,6 @@ function saveConfig(config) {
 }
 
 function runOnce(overrides = {}) {
-  console.log(overrides)
   return httpService.post('deals/run', overrides)
 }
 

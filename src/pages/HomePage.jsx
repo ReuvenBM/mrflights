@@ -59,11 +59,7 @@ export function HomePage() {
     })
 
     socket.on('deals:update', (payload) => {
-      console.log('arrived socket')
-      console.log(payload)
       const hits = Array.isArray(payload?.hits) ? payload.hits.filter(Boolean) : []
-      console.log(hits)
-      console.log(hits.length)
       if (hits.length) setDeals(hits)
     })
 
@@ -162,8 +158,7 @@ export function HomePage() {
 
 
   async function onRun() {
-    console.log('onRun clicked, configPayload =', configPayload)
-
+    //console.log('onRun clicked, configPayload =', configPayload)
     setRunning(true)
     try {
       await savePreferences()
