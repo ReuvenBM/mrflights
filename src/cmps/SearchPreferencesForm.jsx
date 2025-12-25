@@ -48,8 +48,6 @@ export function SearchPreferencesForm({
           />
         </div>
 
-
-
         <div className="date-picker-row">
           <label>
             Date range (start)
@@ -103,7 +101,7 @@ export function SearchPreferencesForm({
             <input name="maxHours" type="number" min="1" value={configForm.maxHours} onChange={onChange} />
           </label>
 
-          <label>
+          {/* <label>
             Interval (minutes)
             <input
               name="intervalMinutes"
@@ -112,7 +110,7 @@ export function SearchPreferencesForm({
               value={configForm.intervalMinutes}
               onChange={onChange}
             />
-          </label>
+          </label> */}
         </div>
 
         <div className="actions">
@@ -120,7 +118,7 @@ export function SearchPreferencesForm({
             {running ? 'Running…' : 'Run now'}
           </button>
 
-          {scheduleSupported && (
+          {/* {scheduleSupported && (
             <>
               <button type="button" onClick={onStartSchedule} disabled={updatingSchedule || !canStartSchedule}>
                 {updatingSchedule ? 'Working…' : 'Start schedule'}
@@ -130,7 +128,7 @@ export function SearchPreferencesForm({
                 {updatingSchedule ? 'Working…' : 'Stop schedule'}
               </button>
             </>
-          )}
+          )} */}
         </div>
       </form>
     </section>

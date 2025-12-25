@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState , useRef} from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import { dealsService } from '../services/deals.service'
 import { userService } from '../services/user.service'
 import { showErrorMsg, showSuccessMsg } from '../services/event-bus.service'
@@ -9,6 +9,7 @@ import { SchedulePanel } from '../cmps/SchedulePanel'
 import { DealsList } from '../cmps/DealsList'
 import { parseList, generateDatesBetween, filterDeals } from '../services/deals.utils'
 import { io } from 'socket.io-client'
+import { Algorithm } from '../cmps/Algorithm'
 
 export function HomePage() {
   const { user, setUser } = useUser()
@@ -270,12 +271,16 @@ export function HomePage() {
         canStartSchedule={!!configPayload.intervalMinutes}
       />
 
-      <SchedulePanel
+      {/* <SchedulePanel
         schedule={schedule}
         supported={scheduleSupported}
         loading={updatingSchedule}
         onRefresh={refreshSchedule}
-      />
+      /> */}
+
+
+      <Algorithm />
+
 
       <DealsList
         title="Matching Deals"
