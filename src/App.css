@@ -107,6 +107,73 @@
   border: 1px solid #c7d1dc;
 }
 
+.form select {
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #c7d1dc;
+  background: #fff;
+  font-size: 14px;
+}
+
+.airport-select {
+  display: grid;
+  gap: 6px;
+  position: relative;
+}
+
+.airport-select-input {
+  padding-right: 28px;
+}
+
+.airport-select-list {
+  width: 100%;
+  border: 1px solid #c7d1dc;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  padding: 6px;
+  display: grid;
+  gap: 4px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.airport-select-option {
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  color: #0b1620;
+}
+
+.airport-select-option:hover {
+  background: #edf3ff;
+}
+
+.airport-select-option:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #f7f8fb;
+}
+
+.airport-select-clear {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
 button {
   border-radius: 8px;
   border: 1px solid #2f6bff;
@@ -426,4 +493,131 @@ button:disabled {
 .app-header .brand-link.active {
   background: transparent;
   border-color: transparent;
+}
+
+/* User message */
+
+.user-msg {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  width: min(520px, calc(100vw - 24px));
+  padding: 14px 14px 14px 16px;
+
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(20, 20, 22, 0.72);
+  backdrop-filter: blur(14px);
+
+  box-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.35),
+    0 1px 0 rgba(255, 255, 255, 0.06) inset;
+
+  color: var(--text, #f3f4f6);
+
+  animation: userMsgIn 240ms ease-out both;
+}
+
+.user-msg h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0.2px;
+  flex: 1;
+}
+
+.user-msg .close-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+
+  display: grid;
+  place-items: center;
+
+  cursor: pointer;
+  opacity: 0.85;
+
+  transition: background 160ms ease, opacity 160ms ease, transform 160ms ease;
+}
+
+.user-msg .close-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  opacity: 1;
+}
+
+.user-msg .close-btn:active {
+  transform: scale(0.96);
+}
+
+/* Accent stripe */
+.user-msg::before {
+  content: "";
+  width: 5px;
+  align-self: stretch;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* Types */
+.user-msg.success {
+  background: rgba(12, 22, 16, 0.72);
+  border-color: rgba(40, 180, 110, 0.28);
+}
+
+.user-msg.success::before {
+  background: var(--success, #22c55e);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.14);
+}
+
+.user-msg.error {
+  background: rgba(26, 12, 14, 0.72);
+  border-color: rgba(239, 68, 68, 0.28);
+}
+
+.user-msg.error::before {
+  background: var(--danger, #ef4444);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14);
+}
+
+/* Optional: info/warn if you add later */
+.user-msg.info::before { background: var(--info, #60a5fa); }
+.user-msg.warn::before { background: var(--warn, #f59e0b); }
+
+@keyframes userMsgIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px) scale(0.98);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Mobile tweaks */
+@media (max-width: 520px) {
+  .user-msg {
+    top: 12px;
+    padding: 12px 12px 12px 14px;
+    border-radius: 12px;
+  }
+
+  .user-msg h4 {
+    font-size: 0.92rem;
+  }
 }

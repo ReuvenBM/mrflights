@@ -42,7 +42,7 @@ export function HomePage() {
     if (!user) return
     refreshStatus()
     refreshDeals()
-    refreshSchedule()
+    //refreshSchedule()
   }, [user])
 
   useEffect(() => {
@@ -114,15 +114,15 @@ export function HomePage() {
     }
   }
 
-  async function refreshSchedule() {
-    try {
-      const res = await dealsService.getSchedule()
-      setSchedule(res)
-    } catch (err) {
-      console.error(err)
-      if (err?.status === 404) setScheduleSupported(false)
-    }
-  }
+  // async function refreshSchedule() {
+  //   try {
+  //     const res = await dealsService.getSchedule()
+  //     setSchedule(res)
+  //   } catch (err) {
+  //     console.error(err)
+  //     if (err?.status === 404) setScheduleSupported(false)
+  //   }
+  // }
 
   async function refreshDeals() {
     try {
@@ -168,7 +168,7 @@ export function HomePage() {
       const hits = Array.isArray(res?.hits) ? res.hits : []
       if (hits.length) setDeals(hits.filter(Boolean))
       await refreshStatus()
-      await refreshSchedule()
+      //await refreshSchedule()
     } catch (err) {
       console.error(err)
       showErrorMsg(err.message || 'Run failed')

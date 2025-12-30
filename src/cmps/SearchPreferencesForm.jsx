@@ -1,5 +1,115 @@
+import { useEffect, useMemo, useState } from 'react'
 import { parseList } from '../services/deals.utils'
-import { AirportMultiSelect } from './AirportMultiSelect'
+import { getAirportOptions } from '../services/airport.service'
+
+function SearchableAirportSelect({ name, value, onChange, options, placeholder }) {
+  const [query, setQuery] = useState('')
+  const [open, setOpen] = useState(false)
+
+  const selected = useMemo(
+    () => options.find((o) => String(o.code) === String(value)),
+    [options, value]
+  )
+  const displayValue = selected ? `${selected.label} (${selected.code})` : ''
+
+  useEffect(() => {
+    if (!open) setQuery(displayValue)
+  }, [displayValue, open])
+
+  const filtered = useMemo(() => {
+    const q = String(query || '').trim().toLowerCase()
+    if (!q) return options
+
+    return options.filter((o) => {
+      const code = String(o.code || '').toLowerCase()
+      const label = String(o.label || '').toLowerCase()
+      return code.includes(q) || label.includes(q)
+    })
+  }, [options, query])
+  const hasExactSelection = selected && query.trim() === displayValue
+
+  function selectOption(option) {
+    onChange({ target: { name, value: option ? option.code : '' } })
+    setOpen(false)
+  }
+
+  function onKeyDown(ev) {
+    if (ev.key === 'Enter') {
+      ev.preventDefault()
+      if (filtered[0]) selectOption(filtered[0])
+    }
+    if (ev.key === 'Escape') {
+      setOpen(false)
+      setQuery(displayValue)
+    }
+  }
+
+  return (
+    <div className="airport-select">
+      <input
+        className="airport-select-input"
+        value={query}
+        placeholder={placeholder}
+        onFocus={() => {
+          if (!hasExactSelection) setOpen(true)
+        }}
+        onChange={(ev) => {
+          setQuery(ev.target.value)
+          setOpen(true)
+        }}
+        onKeyDown={onKeyDown}
+        onBlur={() => {
+          setTimeout(() => {
+            setOpen(false)
+            setQuery(displayValue)
+          }, 120)
+        }}
+      />
+      {(value || query) && (
+        <button
+          type="button"
+          className="airport-select-clear"
+          onMouseDown={(ev) => {
+            ev.preventDefault()
+            ev.stopPropagation()
+          }}
+          onClick={() => {
+            onChange({ target: { name, value: '' } })
+            setQuery('')
+            setOpen(false)
+          }}
+          aria-label="Clear selection"
+          title="Clear"
+        >
+          ×
+        </button>
+      )}
+
+      {open && (
+        <div className="airport-select-list">
+          {filtered.map((o) => (
+            <button
+              key={o.code}
+              type="button"
+              className="airport-select-option"
+              onMouseDown={(ev) => {
+                ev.preventDefault()
+                ev.stopPropagation()
+              }}
+              onClick={() => selectOption(o)}
+              disabled={String(o.code) === String(value)}
+              title={o.code}
+            >
+              {o.label} ({o.code})
+            </button>
+          ))}
+
+          {!filtered.length && !hasExactSelection && <div className="hint">No matches</div>}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export function SearchPreferencesForm({
   configForm,
@@ -17,6 +127,21 @@ export function SearchPreferencesForm({
   scheduleSupported,
   canStartSchedule,
 }) {
+  const airportOptions = useMemo(() => {
+    const list = getAirportOptions().slice()
+    return list.sort((a, b) => {
+      const countryA = String(a.label || '').split(',').pop()?.trim().toLowerCase() || ''
+      const countryB = String(b.label || '').split(',').pop()?.trim().toLowerCase() || ''
+      if (countryA !== countryB) return countryA.localeCompare(countryB)
+
+      const labelA = String(a.label || '').toLowerCase()
+      const labelB = String(b.label || '').toLowerCase()
+      if (labelA !== labelB) return labelA.localeCompare(labelB)
+
+      return String(a.code || '').toLowerCase().localeCompare(String(b.code || '').toLowerCase())
+    })
+  }, [])
+
   return (
     <section className="panel">
       <header className="panel-header">
@@ -25,25 +150,27 @@ export function SearchPreferencesForm({
 
       <form className="form">
         <label>
-          Origins
+          Origin
         </label>
         <div>
-          <AirportMultiSelect
+          <SearchableAirportSelect
             name="origins"
-            value={configForm.origins}
+            value={configForm.origins || ''}
             onChange={onChange}
+            options={airportOptions}
             placeholder="Type a city or code (e.g. Tel Aviv / TLV)"
           />
         </div>
 
         <label>
-          Destinations
+          Destination
         </label>
         <div>
-          <AirportMultiSelect
+          <SearchableAirportSelect
             name="dests"
-            value={configForm.dests}
+            value={configForm.dests || ''}
             onChange={onChange}
+            options={airportOptions}
             placeholder="Type a city or code (e.g. Bangkok / BKK)"
           />
         </div>
