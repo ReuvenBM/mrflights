@@ -1,6 +1,23 @@
 import { dealDate, safeText, buildFlightLink } from '../services/deals.utils'
+import { airlineNames } from '../services/airline-names'
 
-export function DealsList({ title, deals}) {
+function formatCarriers(carriers) {
+  if (!carriers) return '—'
+  const list = Array.isArray(carriers)
+    ? carriers
+    : String(carriers)
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean)
+
+  if (list.length === 0) return '—'
+
+  return list
+    .map((item) => airlineNames[item] || airlineNames[item.toUpperCase()] || item)
+    .join(', ')
+}
+
+export function DealsList({ title, deals }) {
   return (
     <section className="panel">
       <header className="panel-header">
@@ -15,11 +32,11 @@ export function DealsList({ title, deals}) {
             <div>{safeText(d.origin)} → {safeText(d.dest)}</div>
           </header>
           <div className="price">
-            ${safeText(d.price)} {safeText(d.currency)}
+            {safeText(d.price)} {safeText(d.currency)}
           </div>
           <div className="meta">
             <div>{d.nonStop ? 'Nonstop' : `Stops: ${safeText(d.stops)}`}</div>
-            <div>{safeText(d.carriers)}</div>
+            <div>{formatCarriers(d.carriers)}</div>
             <div>≈ {Math.round((d.durationMins || 0) / 60)}h</div>
           </div>
           <div className="times">

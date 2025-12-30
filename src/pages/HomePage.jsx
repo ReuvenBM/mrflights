@@ -163,6 +163,7 @@ export function HomePage() {
     try {
       await savePreferences()
       const watchItemPayload = buildWatchItemPayload(configPayload)
+      console.log(watchItemPayload)
       const res = await dealsService.runOnce(watchItemPayload)
       if (res?.ok === false) throw new Error(res.error || 'Run failed')
       showSuccessMsg('Run started')
