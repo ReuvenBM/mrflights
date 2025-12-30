@@ -162,7 +162,8 @@ export function HomePage() {
     setRunning(true)
     try {
       await savePreferences()
-      const res = await dealsService.runOnce(configPayload)
+      const watchItemPayload = buildWatchItemPayload(configPayload)
+      const res = await dealsService.runOnce(watchItemPayload)
       if (res?.ok === false) throw new Error(res.error || 'Run failed')
       showSuccessMsg('Run started')
       const hits = Array.isArray(res?.hits) ? res.hits : []
@@ -233,6 +234,23 @@ export function HomePage() {
       maxOnestop: toNum(form.maxOnestop),
       maxHours: toNum(form.maxHours),
       intervalMinutes: toNum(form.intervalMinutes)
+    }
+  }
+
+  function buildWatchItemPayload(config) {
+    const origin = Array.isArray(config.origins) ? config.origins[0] : config.origins
+    const dest = Array.isArray(config.dests) ? config.dests[0] : config.dests
+    const dates = Array.isArray(config.dates) ? config.dates : parseList(config.dates)
+
+    return {
+      route: { origin, dest },
+      dates,
+      filters: {
+        currency: config.currency,
+        maxNonstop: config.maxNonstop,
+        maxOnestop: config.maxOnestop,
+        maxHours: config.maxHours
+      }
     }
   }
 

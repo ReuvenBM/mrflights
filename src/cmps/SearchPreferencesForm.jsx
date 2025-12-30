@@ -27,6 +27,7 @@ function SearchableAirportSelect({ name, value, onChange, options, placeholder }
     })
   }, [options, query])
   const hasExactSelection = selected && query.trim() === displayValue
+  const showClear = hasExactSelection && !open
 
   function selectOption(option) {
     onChange({ target: { name, value: option ? option.code : '' } })
@@ -65,7 +66,7 @@ function SearchableAirportSelect({ name, value, onChange, options, placeholder }
           }, 120)
         }}
       />
-      {(value || query) && (
+      {showClear && (
         <button
           type="button"
           className="airport-select-clear"
