@@ -32,16 +32,28 @@ function del(resource) {
 }
 
 async function _request(input, options) {
-  const res = await fetch(input, { credentials: 'include', ...options })
+  let res
+  try {
+    res = await fetch(input, { credentials: 'include', ...options })
+  } catch {
+    throw new Error('Server unavailable')
+  }
   const isJson = res.headers.get('content-type')?.includes('application/json')
   if (!res.ok) {
     let parsed
     try {
       parsed = isJson ? await res.json() : await res.text()
-    } catch (_) {
+    } catch {
       parsed = null
     }
-    const msg = `HTTP ${res.status}${parsed ? ' | ' + (typeof parsed === 'string' ? parsed : JSON.stringify(parsed)) : ''}`
+    let msg
+    if (res.status === 401) {
+      msg = typeof parsed === 'string'
+        ? parsed
+        : parsed?.message || parsed?.error || 'Unauthorized'
+    } else {
+      msg = `HTTP ${res.status}${parsed ? ' | ' + (typeof parsed === 'string' ? parsed : JSON.stringify(parsed)) : ''}`
+    }
     const err = new Error(msg)
     err.status = res.status
     err.data = parsed

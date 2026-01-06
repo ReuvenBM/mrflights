@@ -13,6 +13,10 @@ export function ProfilePage() {
   const [savingCreds, setSavingCreds] = useState(false)
   const [savingProfile, setSavingProfile] = useState(false)
 
+  useEffect(() => {
+    setProfileForm(initProfile(user))
+  }, [user])
+
   if (!user) {
     return (
       <main className="page narrow">
@@ -24,10 +28,6 @@ export function ProfilePage() {
       </main>
     )
   }
-
-  useEffect(() => {
-    setProfileForm(initProfile(user))
-  }, [user])
 
   function handleCredChange(ev) {
     const { name, value } = ev.target
@@ -101,23 +101,19 @@ export function ProfilePage() {
             Email
             <input name="email" type="email" value={profileForm.email} onChange={handleProfileChange} required />
           </label>
-          <label>
+          {/* <label>
             Username
             <input name="username" value={profileForm.username} onChange={handleProfileChange} />
-          </label>
+          </label> */}
           <label>
             Phone
             <input name="phone" value={profileForm.phone} onChange={handleProfileChange} />
-          </label>
-          <label>
-            Image URL
-            <input name="imgUrl" value={profileForm.imgUrl} onChange={handleProfileChange} />
           </label>
           <button type="submit" disabled={savingProfile}>{savingProfile ? 'Saving…' : 'Save profile'}</button>
         </form>
       </section>
 
-      <section className="panel">
+      {/* <section className="panel">
         <header className="panel-header">
           <h2>Saved Flight Config</h2>
         </header>
@@ -130,14 +126,13 @@ export function ProfilePage() {
             <div><strong>Max nonstop:</strong> {formatVal(user.flightConfig.maxNonstop)}</div>
             <div><strong>Max one-stop:</strong> {formatVal(user.flightConfig.maxOnestop)}</div>
             <div><strong>Max hours:</strong> {formatVal(user.flightConfig.maxHours)}</div>
-            <div><strong>Interval (min):</strong> {formatVal(user.flightConfig.intervalMinutes)}</div>
           </div>
         ) : (
           <p>No flight config saved yet.</p>
         )}
-      </section>
+      </section> */}
 
-      <section className="panel">
+      {/* <section className="panel">
         <header className="panel-header">
           <h2>Amadeus Credentials</h2>
         </header>
@@ -152,7 +147,7 @@ export function ProfilePage() {
           </label>
           <button type="submit" disabled={savingCreds}>{savingCreds ? 'Saving…' : 'Save credentials'}</button>
         </form>
-      </section>
+      </section> */}
     </main>
   )
 }
@@ -162,18 +157,18 @@ function initProfile(user) {
     firstName: '',
     lastName: '',
     email: '',
-    username: '',
-    phone: '',
-    imgUrl: ''
+    phone: ''
+    //username: '',
+    //imgUrl: ''
   }
   return {
     _id: user._id,
     firstName: user.firstName || '',
     lastName: user.lastName || '',
     email: user.email || '',
-    username: user.username || '',
     phone: user.phone || '',
-    imgUrl: user.imgUrl || ''
+    //username: user.username || '',
+    //imgUrl: user.imgUrl || ''
   }
 }
 

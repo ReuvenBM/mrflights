@@ -8,11 +8,17 @@ import { AuthPage } from "./pages/AuthPage"
 import { ProfilePage } from "./pages/ProfilePage"
 import { NotFoundPage } from "./pages/NotFoundPage"
 import { UserProvider } from "./store/UserContext"
+import { useSessionTracking } from "./hooks/useSessionTracking"
+
+function SessionTracking() {
+  useSessionTracking()
+  return null
+}
 
 function App() {
-
   return (
     <UserProvider>
+      <SessionTracking />
       <Router>
         <div className="app-layout">
           <AppHeader />

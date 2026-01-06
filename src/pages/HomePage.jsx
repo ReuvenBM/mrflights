@@ -20,8 +20,8 @@ export function HomePage() {
     currency: '',
     maxNonstop: '',
     maxOnestop: '',
-    maxHours: '',
-    intervalMinutes: ''
+    maxHours: ''
+    //intervalMinutes: ''
   })
   const [dateRange, setDateRange] = useState({ start: '', end: '' })
   const [status, setStatus] = useState(null)
@@ -234,7 +234,7 @@ export function HomePage() {
       maxNonstop: toNum(form.maxNonstop),
       maxOnestop: toNum(form.maxOnestop),
       maxHours: toNum(form.maxHours),
-      intervalMinutes: toNum(form.intervalMinutes)
+      //intervalMinutes: toNum(form.intervalMinutes)
     }
   }
 
@@ -282,7 +282,7 @@ export function HomePage() {
         running={running}
         updatingSchedule={updatingSchedule}
         scheduleSupported={scheduleSupported}
-        canStartSchedule={!!configPayload.intervalMinutes}
+        //canStartSchedule={!!configPayload.intervalMinutes}
       />
 
       {/* <SchedulePanel

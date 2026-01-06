@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { userService } from '../services/user.service'
+import { sessionService } from '../services/session.service'
 
 const UserContext = createContext(null)
 
@@ -21,6 +22,8 @@ export function UserProvider({ children }) {
   }, [user?._id])
 
   async function logout() {
+    await sessionService.end('logout').catch(() => {})
+    sessionService.clearSessionId()
     await userService.logout()
     setUser(null)
   }
