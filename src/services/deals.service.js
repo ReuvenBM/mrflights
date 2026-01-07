@@ -20,7 +20,7 @@ function saveConfig(config) {
 }
 
 function runOnce(overrides = {}) {
-  return httpService.post('watchItem', overrides)
+  return httpService.post('watchItem/run', overrides)
   //return httpService.post('deals/run', overrides)
 }
 

@@ -6,8 +6,7 @@ import { useUser } from '../store/UserContext'
 import { Link } from 'react-router-dom'
 import { SearchPreferencesForm } from '../cmps/SearchPreferencesForm'
 import { SchedulePanel } from '../cmps/SchedulePanel'
-import { DealsList } from '../cmps/DealsList'
-import { parseList, generateDatesBetween, filterDeals } from '../services/deals.utils'
+import { parseList, generateDatesBetween } from '../services/deals.utils'
 import { io } from 'socket.io-client'
 import { Algorithm } from '../cmps/Algorithm'
 
@@ -27,21 +26,16 @@ export function HomePage() {
   const [status, setStatus] = useState(null)
   const [schedule, setSchedule] = useState(null)
   const [scheduleSupported, setScheduleSupported] = useState(true)
-  const [deals, setDeals] = useState([])
+  const [grouped, setGrouped] = useState(null)
   const [loadingStatus, setLoadingStatus] = useState(false)
   const [running, setRunning] = useState(false)
   const [updatingSchedule, setUpdatingSchedule] = useState(false)
 
   const configPayload = useMemo(() => normalizeConfig(configForm), [configForm])
   const datesList = useMemo(() => (Array.isArray(configForm.dates) ? configForm.dates : parseList(configForm.dates)), [configForm.dates])
-  const matchingDeals = useMemo(() => filterDeals(deals, configPayload), [deals, configPayload])
-
-
-
   useEffect(() => {
     if (!user) return
     refreshStatus()
-    refreshDeals()
     //refreshSchedule()
   }, [user])
 
@@ -59,8 +53,8 @@ export function HomePage() {
     })
 
     socket.on('deals:update', (payload) => {
-      const hits = Array.isArray(payload?.hits) ? payload.hits.filter(Boolean) : []
-      if (hits.length) setDeals(hits)
+      if (!payload || !Object.prototype.hasOwnProperty.call(payload, 'grouped')) return
+      setGrouped(payload.grouped)
     })
 
     return () => socket.disconnect()
@@ -124,22 +118,6 @@ export function HomePage() {
   //   }
   // }
 
-  async function refreshDeals() {
-    try {
-      const res = await dealsService.getDeals()
-      const rawList = Array.isArray(res?.hits)
-        ? res.hits
-        : Array.isArray(res?.status?.hits)
-          ? res.status.hits
-          : Array.isArray(res)
-            ? res
-            : []
-      const list = Array.isArray(rawList) ? rawList.filter(Boolean) : []
-      setDeals(list)
-    } catch (err) {
-      console.error(err)
-    }
-  }
   async function savePreferences() {
     const res = await dealsService.saveConfig(configPayload)
     if (res?.ok === false) throw new Error(res.error || 'Save failed')
@@ -166,9 +144,8 @@ export function HomePage() {
       console.log(watchItemPayload)
       const res = await dealsService.runOnce(watchItemPayload)
       if (res?.ok === false) throw new Error(res.error || 'Run failed')
+      if (!res?.runId) throw new Error('Run failed')
       showSuccessMsg('Run started')
-      const hits = Array.isArray(res?.hits) ? res.hits : []
-      if (hits.length) setDeals(hits.filter(Boolean))
       await refreshStatus()
       //await refreshSchedule()
     } catch (err) {
@@ -186,16 +163,6 @@ export function HomePage() {
 
       const res = await dealsService.startSchedule(configPayload)
       if (res?.ok === false) throw new Error(res.error || 'Schedule failed')
-
-      const firstHits = Array.isArray(res?.firstRun?.hits)
-        ? res.firstRun.hits.filter(Boolean)
-        : []
-
-      if (firstHits.length) {
-        setDeals(firstHits)
-      } else {
-        await refreshDeals()
-      }
 
       showSuccessMsg('Scheduler started')
       await refreshSchedule()
@@ -295,18 +262,34 @@ export function HomePage() {
 
       <Algorithm />
 
-
-      <DealsList
-        title="Matching Deals"
-        deals={matchingDeals}
-        onReload={refreshDeals}
-      />
-
-      <DealsList
-        title="All Results"
-        deals={deals}
-        onReload={refreshDeals}
-      />
+      {!grouped || !Object.keys(grouped.routes || {}).length ? (
+        <section className="panel">
+          <h3>No results yet</h3>
+        </section>
+      ) : (
+        Object.entries(grouped.routes).map(([routeKey, route]) => (
+          <section className="panel" key={routeKey}>
+            <h3>{route.origin} → {route.dest}</h3>
+            {Object.entries(route.dates || {}).map(([date, bucket]) => (
+              <div key={date}>
+                <h4>{date}</h4>
+                <p>Min price: {bucket.minPrice ?? 'N/A'} | Count: {bucket.count ?? 0}</p>
+                {Array.isArray(bucket.flightOptions) && bucket.flightOptions.length ? (
+                  <ul>
+                    {bucket.flightOptions.map((option) => (
+                      <li key={option.key}>
+                        {option.price} {option.currency} | stops: {option.stops} | carriers: {option.carriers} | {option.dep} → {option.arr}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>No options</p>
+                )}
+              </div>
+            ))}
+          </section>
+        ))
+      )}
     </main>
   )
 }
