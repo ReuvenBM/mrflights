@@ -6,20 +6,33 @@ const UserContext = createContext(null)
 
 export function UserProvider({ children }) {
   const [user, setUser] = useState(userService.getLoggedinUser())
+  const [userLoading, setUserLoading] = useState(true)
 
-  // On mount, if we have a logged-in user but missing flightConfig, refresh from server
+  // Always rehydrate on app load/refresh
   useEffect(() => {
-    if (!user?._id) return
-    if (user.flightConfig) return
+    let isMounted = true
     ;(async () => {
       try {
-        const fresh = await userService.getById(user._id)
+        const fresh = await userService.getMe()
+        if (!isMounted) return
         setUser(userService.saveLocalUser(fresh))
       } catch (err) {
-        console.error('Failed to hydrate user', err)
+        if (!isMounted) return
+        if (err?.status === 401) {
+          sessionService.clearSessionId()
+          sessionStorage.removeItem('loggedinUser')
+          setUser(null)
+        } else {
+          console.error('Failed to hydrate user', err)
+        }
+      } finally {
+        if (isMounted) setUserLoading(false)
       }
     })()
-  }, [user?._id])
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   async function logout() {
     await sessionService.end('logout').catch(() => {})
@@ -29,7 +42,7 @@ export function UserProvider({ children }) {
   }
 
   return (
-    <UserContext.Provider value={{ user, setUser, logout }}>
+    <UserContext.Provider value={{ user, setUser, logout, userLoading }}>
       {children}
     </UserContext.Provider>
   )

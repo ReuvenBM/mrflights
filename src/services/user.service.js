@@ -5,6 +5,7 @@ const STORAGE_KEY_LOGGEDIN_USER = 'loggedinUser'
 export const userService = {
   query,
   getById,
+  getMe,
   save,
   remove,
   updateProfile,
@@ -23,6 +24,10 @@ function query(params = {}) {
 
 function getById(userId) {
   return httpService.get(`user/${userId}`)
+}
+
+function getMe() {
+  return httpService.get('auth/me')
 }
 
 function save(user) {

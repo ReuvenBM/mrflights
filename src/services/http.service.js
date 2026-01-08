@@ -1,10 +1,8 @@
-const BASE_URL =
-  import.meta.env.VITE_API_URL
-  || (import.meta.env.PROD ? `${window.location.origin}/api` : 'http://127.0.0.1:3030/api')
+const BASE_URL = '/api'
 export const httpService = { get, post, put, del }
 
 function get(resource, params) {
-  const url = new URL(`${BASE_URL}/${resource}`)
+  const url = new URL(`${BASE_URL}/${resource}`, window.location.origin)
   if (params) Object.entries(params).forEach(([k, v]) => {
     if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, v)
   })

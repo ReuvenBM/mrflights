@@ -11,7 +11,7 @@ import { io } from 'socket.io-client'
 import { Algorithm } from '../cmps/Algorithm'
 
 export function HomePage() {
-  const { user, setUser } = useUser()
+  const { user, setUser, userLoading } = useUser()
   const [configForm, setConfigForm] = useState({
     origins: '',
     dests: '',
@@ -27,6 +27,8 @@ export function HomePage() {
   const [schedule, setSchedule] = useState(null)
   const [scheduleSupported, setScheduleSupported] = useState(true)
   const [grouped, setGrouped] = useState(null)
+  const [snapshotUpdatedAt, setSnapshotUpdatedAt] = useState(null)
+  const snapshotUpdatedAtRef = useRef(null)
   const [loadingStatus, setLoadingStatus] = useState(false)
   const [running, setRunning] = useState(false)
   const [updatingSchedule, setUpdatingSchedule] = useState(false)
@@ -41,10 +43,19 @@ export function HomePage() {
 
   useEffect(() => {
     if (!user) return
+    const snapshot = user.flightConfig?.snapshot
+    const updatedAt = user.flightConfig?.snapshotUpdatedAt
+    if (snapshot && typeof updatedAt === 'number') {
+      setGrouped(snapshot)
+      setSnapshotUpdatedAt(updatedAt)
+      snapshotUpdatedAtRef.current = updatedAt
+    }
+  }, [user])
 
-    const baseUrl = import.meta.env.VITE_DEALS_API_URL || 'http://localhost:3030'
+  useEffect(() => {
+    if (!user) return
 
-    const socket = io(baseUrl, {
+    const socket = io({
       withCredentials: true,
     })
 
@@ -54,7 +65,16 @@ export function HomePage() {
 
     socket.on('deals:update', (payload) => {
       if (!payload || !Object.prototype.hasOwnProperty.call(payload, 'grouped')) return
+      const incomingUpdatedAt = payload.snapshotUpdatedAt
+      const currentUpdatedAt = snapshotUpdatedAtRef.current
+      if (typeof incomingUpdatedAt === 'number' && typeof currentUpdatedAt === 'number') {
+        if (incomingUpdatedAt < currentUpdatedAt) return
+      }
       setGrouped(payload.grouped)
+      if (typeof incomingUpdatedAt === 'number') {
+        setSnapshotUpdatedAt(incomingUpdatedAt)
+        snapshotUpdatedAtRef.current = incomingUpdatedAt
+      }
     })
 
     return () => socket.disconnect()
@@ -125,7 +145,7 @@ export function HomePage() {
     if (user) {
       const updated = userService.saveLocalUser({
         ...user,
-        flightConfig: res?.config || configPayload,
+        flightConfig: { ...user.flightConfig, ...(res?.config || configPayload) },
       })
       setUser(updated)
     }
@@ -220,6 +240,16 @@ export function HomePage() {
         maxHours: config.maxHours
       }
     }
+  }
+
+  if (userLoading) {
+    return (
+      <main className="page">
+        <section className="panel">
+          <h3>Loading…</h3>
+        </section>
+      </main>
+    )
   }
 
   if (!user) {
