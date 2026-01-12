@@ -15,8 +15,6 @@ export function AuthPage() {
     email: '',
     username: '',
     password: '',
-    amadeusKey: '',
-    amadeusSecret: '',
     imgUrl: ''
   })
 
@@ -86,20 +84,6 @@ export function AuthPage() {
             Password *
             <input name="password" value={form.password} onChange={handleChange} type="password" required />
           </label>
-          {mode === 'signup' && (
-            <>
-              <div className="double">
-                <label>
-                  Amadeus Key *
-                  <input name="amadeusKey" value={form.amadeusKey} onChange={handleChange} required />
-                </label>
-                <label>
-                  Amadeus Secret *
-                  <input name="amadeusSecret" value={form.amadeusSecret} onChange={handleChange} required />
-                </label>
-              </div>
-            </>
-          )}
           <button type="submit" disabled={loading}>{loading ? 'Please wait…' : (mode === 'login' ? 'Login' : 'Signup')}</button>
         </form>
       </section>

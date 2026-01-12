@@ -1,15 +1,10 @@
 import { httpService } from './http.service'
 
 export const dealsService = {
-  saveCredentials,
   runOnce,
   getStatus,
   getDeals,
   getSnapshot
-}
-
-function saveCredentials({ clientId, clientSecret }) {
-  return httpService.post('deals/credentials', { clientId, clientSecret })
 }
 
 function runOnce(overrides = {}) {

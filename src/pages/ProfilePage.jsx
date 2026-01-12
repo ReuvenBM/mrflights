@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useUser } from '../store/UserContext'
-import { dealsService } from '../services/deals.service'
 import { userService } from '../services/user.service'
 import { showErrorMsg, showSuccessMsg } from '../services/event-bus.service'
 import { Link } from 'react-router-dom'
@@ -8,8 +7,6 @@ import { Link } from 'react-router-dom'
 export function ProfilePage() {
   const { user, logout, setUser } = useUser()
   const [profileForm, setProfileForm] = useState(initProfile(user))
-  const [credForm, setCredForm] = useState({ clientId: '', clientSecret: '' })
-  const [savingCreds, setSavingCreds] = useState(false)
   const [savingProfile, setSavingProfile] = useState(false)
 
   useEffect(() => {
@@ -26,11 +23,6 @@ export function ProfilePage() {
         </section>
       </main>
     )
-  }
-
-  function handleCredChange(ev) {
-    const { name, value } = ev.target
-    setCredForm((prev) => ({ ...prev, [name]: value }))
   }
 
   function handleProfileChange(ev) {
@@ -50,21 +42,6 @@ export function ProfilePage() {
       showErrorMsg(err.message || 'Update failed')
     } finally {
       setSavingProfile(false)
-    }
-  }
-
-  async function onSaveCredentials(ev) {
-    ev.preventDefault()
-    setSavingCreds(true)
-    try {
-      const res = await dealsService.saveCredentials(credForm)
-      if (res?.ok === false) throw new Error(res.error || 'Save failed')
-      showSuccessMsg('Credentials updated')
-    } catch (err) {
-      console.error(err)
-      showErrorMsg(err.message || 'Save failed')
-    } finally {
-      setSavingCreds(false)
     }
   }
 
@@ -112,22 +89,6 @@ export function ProfilePage() {
         </form>
       </section>
 
-      {/* <section className="panel">
-        <header className="panel-header">
-          <h2>Amadeus Credentials</h2>
-        </header>
-        <form className="form" onSubmit={onSaveCredentials}>
-          <label>
-            Client ID
-            <input name="clientId" value={credForm.clientId} onChange={handleCredChange} required />
-          </label>
-          <label>
-            Client Secret
-            <input name="clientSecret" value={credForm.clientSecret} onChange={handleCredChange} required />
-          </label>
-          <button type="submit" disabled={savingCreds}>{savingCreds ? 'Saving…' : 'Save credentials'}</button>
-        </form>
-      </section> */}
     </main>
   )
 }
