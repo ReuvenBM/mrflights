@@ -4,7 +4,6 @@ import { dealsService } from '../services/deals.service'
 import { userService } from '../services/user.service'
 import { showErrorMsg, showSuccessMsg } from '../services/event-bus.service'
 import { Link } from 'react-router-dom'
-import { formatVal } from '../services/deals.utils'
 
 export function ProfilePage() {
   const { user, logout, setUser } = useUser()
@@ -115,25 +114,6 @@ export function ProfilePage() {
 
       {/* <section className="panel">
         <header className="panel-header">
-          <h2>Saved Flight Config</h2>
-        </header>
-        {user.flightConfig ? (
-          <div className="status-grid">
-            <div><strong>Origins:</strong> {formatList(user.flightConfig.origins)}</div>
-            <div><strong>Dests:</strong> {formatList(user.flightConfig.dests)}</div>
-            <div><strong>Dates:</strong> {formatList(user.flightConfig.dates)}</div>
-            <div><strong>Currency:</strong> {formatVal(user.flightConfig.currency)}</div>
-            <div><strong>Max nonstop:</strong> {formatVal(user.flightConfig.maxNonstop)}</div>
-            <div><strong>Max one-stop:</strong> {formatVal(user.flightConfig.maxOnestop)}</div>
-            <div><strong>Max hours:</strong> {formatVal(user.flightConfig.maxHours)}</div>
-          </div>
-        ) : (
-          <p>No flight config saved yet.</p>
-        )}
-      </section> */}
-
-      {/* <section className="panel">
-        <header className="panel-header">
           <h2>Amadeus Credentials</h2>
         </header>
         <form className="form" onSubmit={onSaveCredentials}>
@@ -170,10 +150,4 @@ function initProfile(user) {
     //username: user.username || '',
     //imgUrl: user.imgUrl || ''
   }
-}
-
-function formatList(val) {
-  if (!val) return '—'
-  if (Array.isArray(val)) return val.join(', ')
-  return formatVal(val)
 }

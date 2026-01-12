@@ -70,8 +70,7 @@ function saveLocalUser(user) {
     firstName: user.firstName,
     lastName: user.lastName,
     favorites: user.favorites || [],
-    imgUrl: user.imgUrl || user.avatar || '',
-    flightConfig: user.flightConfig || null
+    imgUrl: user.imgUrl || user.avatar || ''
   }
   sessionStorage.setItem(STORAGE_KEY_LOGGEDIN_USER, JSON.stringify(minimalUser))
   return minimalUser

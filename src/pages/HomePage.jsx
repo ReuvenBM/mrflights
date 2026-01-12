@@ -1,17 +1,15 @@
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { dealsService } from '../services/deals.service'
-import { userService } from '../services/user.service'
 import { showErrorMsg, showSuccessMsg } from '../services/event-bus.service'
 import { useUser } from '../store/UserContext'
 import { Link } from 'react-router-dom'
 import { SearchPreferencesForm } from '../cmps/SearchPreferencesForm'
-import { SchedulePanel } from '../cmps/SchedulePanel'
 import { parseList, generateDatesBetween } from '../services/deals.utils'
 import { io } from 'socket.io-client'
 import { Algorithm } from '../cmps/Algorithm'
 
 export function HomePage() {
-  const { user, setUser, userLoading } = useUser()
+  const { user, userLoading } = useUser()
   const [configForm, setConfigForm] = useState({
     origins: '',
     dests: '',
@@ -24,32 +22,18 @@ export function HomePage() {
   })
   const [dateRange, setDateRange] = useState({ start: '', end: '' })
   const [status, setStatus] = useState(null)
-  const [schedule, setSchedule] = useState(null)
-  const [scheduleSupported, setScheduleSupported] = useState(true)
-  const [grouped, setGrouped] = useState(null)
+  const [snapshots, setSnapshots] = useState(null)
   const [snapshotUpdatedAt, setSnapshotUpdatedAt] = useState(null)
   const snapshotUpdatedAtRef = useRef(null)
   const [loadingStatus, setLoadingStatus] = useState(false)
   const [running, setRunning] = useState(false)
-  const [updatingSchedule, setUpdatingSchedule] = useState(false)
 
   const configPayload = useMemo(() => normalizeConfig(configForm), [configForm])
   const datesList = useMemo(() => (Array.isArray(configForm.dates) ? configForm.dates : parseList(configForm.dates)), [configForm.dates])
   useEffect(() => {
     if (!user) return
     refreshStatus()
-    //refreshSchedule()
-  }, [user])
-
-  useEffect(() => {
-    if (!user) return
-    const snapshot = user.flightConfig?.snapshot
-    const updatedAt = user.flightConfig?.snapshotUpdatedAt
-    if (snapshot && typeof updatedAt === 'number') {
-      setGrouped(snapshot)
-      setSnapshotUpdatedAt(updatedAt)
-      snapshotUpdatedAtRef.current = updatedAt
-    }
+    refreshSnapshot()
   }, [user])
 
   useEffect(() => {
@@ -64,17 +48,13 @@ export function HomePage() {
     })
 
     socket.on('deals:update', (payload) => {
-      if (!payload || !Object.prototype.hasOwnProperty.call(payload, 'grouped')) return
-      const incomingUpdatedAt = payload.snapshotUpdatedAt
+      if (!payload?.refresh) return
+      const incomingUpdatedAt = payload.updatedAt
       const currentUpdatedAt = snapshotUpdatedAtRef.current
       if (typeof incomingUpdatedAt === 'number' && typeof currentUpdatedAt === 'number') {
-        if (incomingUpdatedAt < currentUpdatedAt) return
+        if (incomingUpdatedAt <= currentUpdatedAt) return
       }
-      setGrouped(payload.grouped)
-      if (typeof incomingUpdatedAt === 'number') {
-        setSnapshotUpdatedAt(incomingUpdatedAt)
-        snapshotUpdatedAtRef.current = incomingUpdatedAt
-      }
+      refreshSnapshot()
     })
 
     return () => socket.disconnect()
@@ -128,38 +108,27 @@ export function HomePage() {
     }
   }
 
-  // async function refreshSchedule() {
-  //   try {
-  //     const res = await dealsService.getSchedule()
-  //     setSchedule(res)
-  //   } catch (err) {
-  //     console.error(err)
-  //     if (err?.status === 404) setScheduleSupported(false)
-  //   }
-  // }
-
-  async function savePreferences() {
-    const res = await dealsService.saveConfig(configPayload)
-    if (res?.ok === false) throw new Error(res.error || 'Save failed')
-
-    if (user) {
-      const updated = userService.saveLocalUser({
-        ...user,
-        flightConfig: { ...user.flightConfig, ...(res?.config || configPayload) },
-      })
-      setUser(updated)
+  async function refreshSnapshot() {
+    try {
+      const res = await dealsService.getSnapshot()
+      if (res?.ok === false) throw new Error(res.error || 'Snapshot error')
+      const nextSnapshots = res?.snapshots || {}
+      const updatedAt = res?.updatedAt
+      setSnapshots(nextSnapshots)
+      if (typeof updatedAt === 'number') {
+        setSnapshotUpdatedAt(updatedAt)
+        snapshotUpdatedAtRef.current = updatedAt
+      }
+    } catch (err) {
+      console.error(err)
+      showErrorMsg(err.message || 'Snapshot error')
     }
-
-    return res
   }
-
-
 
   async function onRun() {
     //console.log('onRun clicked, configPayload =', configPayload)
     setRunning(true)
     try {
-      await savePreferences()
       const watchItemPayload = buildWatchItemPayload(configPayload)
       console.log(watchItemPayload)
       const res = await dealsService.runOnce(watchItemPayload)
@@ -176,37 +145,6 @@ export function HomePage() {
     }
   }
 
-  async function onStartSchedule() {
-    setUpdatingSchedule(true)
-    try {
-      await savePreferences()
-
-      const res = await dealsService.startSchedule(configPayload)
-      if (res?.ok === false) throw new Error(res.error || 'Schedule failed')
-
-      showSuccessMsg('Scheduler started')
-      await refreshSchedule()
-    } catch (err) {
-      console.error(err)
-      showErrorMsg(err.message || 'Start schedule failed')
-    } finally {
-      setUpdatingSchedule(false)
-    }
-  }
-
-  async function onStopSchedule() {
-    setUpdatingSchedule(true)
-    try {
-      await dealsService.stopSchedule()
-      showSuccessMsg('Scheduler stopped')
-      await refreshSchedule()
-    } catch (err) {
-      console.error(err)
-      showErrorMsg(err.message || 'Stop schedule failed')
-    } finally {
-      setUpdatingSchedule(false)
-    }
-  }
   function normalizeConfig(form) {
     const toNum = (v) => {
       const n = Number(v)
@@ -274,49 +212,35 @@ export function HomePage() {
         onRemoveDate={onRemoveDate}
         onChange={handleConfigChange}
         onRun={onRun}
-        onStartSchedule={onStartSchedule}
-        onStopSchedule={onStopSchedule}
         running={running}
-        updatingSchedule={updatingSchedule}
-        scheduleSupported={scheduleSupported}
         //canStartSchedule={!!configPayload.intervalMinutes}
       />
 
-      {/* <SchedulePanel
-        schedule={schedule}
-        supported={scheduleSupported}
-        loading={updatingSchedule}
-        onRefresh={refreshSchedule}
-      /> */}
-
-
       <Algorithm />
 
-      {!grouped || !Object.keys(grouped.routes || {}).length ? (
+      {!snapshots || !Object.keys(snapshots || {}).length ? (
         <section className="panel">
           <h3>No results yet</h3>
         </section>
       ) : (
-        Object.entries(grouped.routes).map(([routeKey, route]) => (
-          <section className="panel" key={routeKey}>
-            <h3>{route.origin} → {route.dest}</h3>
-            {Object.entries(route.dates || {}).map(([date, bucket]) => (
-              <div key={date}>
-                <h4>{date}</h4>
-                <p>Min price: {bucket.minPrice ?? 'N/A'} | Count: {bucket.count ?? 0}</p>
-                {Array.isArray(bucket.flightOptions) && bucket.flightOptions.length ? (
-                  <ul>
-                    {bucket.flightOptions.map((option) => (
-                      <li key={option.key}>
-                        {option.price} {option.currency} | stops: {option.stops} | carriers: {option.carriers} | {option.dep} → {option.arr}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>No options</p>
-                )}
-              </div>
-            ))}
+        Object.values(snapshots).map((snapshot) => (
+          <section className="panel" key={snapshot.watchItemId}>
+            <h3>{snapshot.route?.origin} → {snapshot.route?.dest}</h3>
+            <div>
+              <h4>{snapshot.date}</h4>
+              <p>Min price: {snapshot.minPrice ?? 'N/A'} | Count: {snapshot.count ?? 0}</p>
+              {Array.isArray(snapshot.options) && snapshot.options.length ? (
+                <ul>
+                  {snapshot.options.map((option) => (
+                    <li key={option.key}>
+                      {option.price} {option.currency} | stops: {option.stops} | carriers: {option.carriers} | {option.dep} → {option.arr}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No options</p>
+              )}
+            </div>
           </section>
         ))
       )}
