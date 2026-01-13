@@ -49,6 +49,7 @@ export function useSessionTracking() {
         stopHeartbeat()
         if (!isAuthenticated) return
         sessionService.end('hidden').catch(() => {})
+        startedRef.current = false
         return
       }
       startSession()
@@ -59,6 +60,7 @@ export function useSessionTracking() {
       const sessionId = sessionService.getStoredSessionId()
       if (!isAuthenticated) {
         sessionService.clearSessionId()
+        startedRef.current = false
         return
       }
       stopHeartbeat()
@@ -67,6 +69,7 @@ export function useSessionTracking() {
         navigator.sendBeacon('/api/session/end', JSON.stringify({ sessionId, reason: 'close' }))
       }
       sessionService.clearSessionId()
+      startedRef.current = false
     }
 
     const attachListeners = () => {
@@ -85,6 +88,7 @@ export function useSessionTracking() {
 
     if (!isAuthenticated) {
       cleanup()
+      startedRef.current = false
       return () => {
         mounted = false
         cleanup()
