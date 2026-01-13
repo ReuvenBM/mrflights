@@ -1,4 +1,15 @@
 import { useState } from 'react'
+import { AIRPORT_OPTIONS, buildAirportMap } from '../services/airport.service'
+
+const airportByCode = buildAirportMap(AIRPORT_OPTIONS)
+const formatAirportLabel = (code) => {
+  const raw = String(code || '').trim()
+  if (!raw) return ''
+  const upper = raw.toUpperCase()
+  const airport = airportByCode.get(upper)
+  if (!airport) return raw
+  return `${airport.label} (${upper})`
+}
 
 export function SnapshotsList({ snapshots, onDeleteWatchItem, onDeleteRoute }) {
   const [openRouteKey, setOpenRouteKey] = useState(null)
@@ -40,7 +51,7 @@ export function SnapshotsList({ snapshots, onDeleteWatchItem, onDeleteRoute }) {
                 }}
               >
                 <h3>
-                  {routeSnapshots[0]?.route?.origin} → {routeSnapshots[0]?.route?.dest}
+                  {formatAirportLabel(routeSnapshots[0]?.route?.origin)} → {formatAirportLabel(routeSnapshots[0]?.route?.dest)}
                 </h3>
                 <p>{minDate} - {maxDate}</p>
                 <button
