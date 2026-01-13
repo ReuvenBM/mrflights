@@ -146,6 +146,32 @@ export function HomePage() {
     }
   }
 
+  async function onDeleteWatchItem(watchItemId) {
+    if (!watchItemId) return
+    try {
+      const res = await dealsService.deleteWatchItem(watchItemId)
+      if (res?.ok === false) throw new Error(res.error || 'Delete failed')
+      await refreshSnapshot()
+    } catch (err) {
+      console.error(err)
+      showErrorMsg(err.message || 'Delete failed')
+    }
+  }
+
+  async function onDeleteRoute(watchItemIds) {
+    const ids = (Array.isArray(watchItemIds) ? watchItemIds : []).filter(Boolean)
+    if (!ids.length) return
+    try {
+      const results = await Promise.all(ids.map((id) => dealsService.deleteWatchItem(id)))
+      const failed = results.find((res) => res?.ok === false)
+      if (failed) throw new Error(failed.error || 'Delete failed')
+      await refreshSnapshot()
+    } catch (err) {
+      console.error(err)
+      showErrorMsg(err.message || 'Delete failed')
+    }
+  }
+
   function normalizeConfig(form) {
     const toNum = (v) => {
       const n = Number(v)
@@ -219,7 +245,7 @@ export function HomePage() {
 
       <Algorithm />
 
-      <SnapshotsList snapshots={snapshots} />
+      <SnapshotsList snapshots={snapshots} onDeleteWatchItem={onDeleteWatchItem} onDeleteRoute={onDeleteRoute} />
     </main>
   )
 }

@@ -1,7 +1,9 @@
 import { useState } from 'react'
 
-export function SnapshotsList({ snapshots }) {
+export function SnapshotsList({ snapshots, onDeleteWatchItem, onDeleteRoute }) {
   const [openRouteKey, setOpenRouteKey] = useState(null)
+  const [deletingRouteKey, setDeletingRouteKey] = useState(null)
+  const [deletingWatchItems, setDeletingWatchItems] = useState({})
 
   const groupedSnapshots = Object.values(snapshots || {}).reduce((acc, snapshot) => {
     const routeKey = `${snapshot.route?.origin}-${snapshot.route?.dest}`
@@ -22,6 +24,8 @@ export function SnapshotsList({ snapshots }) {
           const minDate = dates[0]
           const maxDate = dates[dates.length - 1]
           const isOpen = openRouteKey === routeKey
+          const routeWatchItemIds = routeSnapshots.map((snapshot) => snapshot.watchItemId).filter(Boolean)
+          const isDeletingRoute = deletingRouteKey === routeKey
 
           return (
             <section className="panel" key={routeKey}>
@@ -39,6 +43,22 @@ export function SnapshotsList({ snapshots }) {
                   {routeSnapshots[0]?.route?.origin} → {routeSnapshots[0]?.route?.dest}
                 </h3>
                 <p>{minDate} - {maxDate}</p>
+                <button
+                  type="button"
+                  onClick={async (ev) => {
+                    ev.stopPropagation()
+                    if (isDeletingRoute) return
+                    setDeletingRouteKey(routeKey)
+                    try {
+                      await onDeleteRoute(routeWatchItemIds)
+                    } finally {
+                      setDeletingRouteKey(null)
+                    }
+                  }}
+                  disabled={isDeletingRoute || !routeWatchItemIds.length}
+                >
+                  {isDeletingRoute ? 'Deleting…' : 'Delete route'}
+                </button>
               </div>
               {isOpen && (
                 <div>
@@ -46,6 +66,26 @@ export function SnapshotsList({ snapshots }) {
                     <div key={snapshot.watchItemId}>
                       <h4>{snapshot.date}</h4>
                       <p>Min price: {snapshot.minPrice ?? 'N/A'} </p>
+                      <button
+                        type="button"
+                        onClick={async (ev) => {
+                          ev.stopPropagation()
+                          if (!snapshot.watchItemId || deletingWatchItems[snapshot.watchItemId]) return
+                          setDeletingWatchItems((prev) => ({ ...prev, [snapshot.watchItemId]: true }))
+                          try {
+                            await onDeleteWatchItem(snapshot.watchItemId)
+                          } finally {
+                            setDeletingWatchItems((prev) => {
+                              const next = { ...prev }
+                              delete next[snapshot.watchItemId]
+                              return next
+                            })
+                          }
+                        }}
+                        disabled={!snapshot.watchItemId || deletingWatchItems[snapshot.watchItemId]}
+                      >
+                        {deletingWatchItems[snapshot.watchItemId] ? 'Deleting…' : 'Delete'}
+                      </button>
                       {Array.isArray(snapshot.options) && snapshot.options.length ? (
                         <ul>
                           {snapshot.options.map((option) => (

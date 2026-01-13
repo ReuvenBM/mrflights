@@ -4,7 +4,8 @@ export const dealsService = {
   runOnce,
   getStatus,
   getDeals,
-  getSnapshot
+  getSnapshot,
+  deleteWatchItem
 }
 
 function runOnce(overrides = {}) {
@@ -22,4 +23,8 @@ function getDeals() {
 
 function getSnapshot() {
   return httpService.get('deals/snapshot')
+}
+
+function deleteWatchItem(watchItemId) {
+  return httpService.del(`watchItem/${watchItemId}`)
 }
