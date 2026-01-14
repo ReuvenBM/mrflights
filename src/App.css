@@ -76,6 +76,65 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
+.snapshots-dates {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.snapshot-card {
+  border: 1px solid #e3e9f0;
+  border-radius: 10px;
+  padding: 12px;
+  background: #fff;
+}
+
+.snapshot-cardHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.snapshot-date {
+  margin: 0;
+  font-size: 16px;
+}
+
+.snapshot-meta {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.snapshot-minPrice {
+  font-weight: 700;
+}
+
+.snapshot-deleteBtn {
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.snapshot-options {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+}
+
+.snapshot-option {
+  line-height: 1.35;
+}
+
+.snapshot-option span {
+  display: inline-block;
+  margin-right: 10px;
+}
+
 .panel-header {
   display: flex;
   align-items: center;
@@ -363,6 +422,13 @@ button:disabled {
 
   .app-header nav {
     gap: 6px;
+  }
+}
+
+@media (max-width: 520px) {
+  .snapshot-option span {
+    display: block;
+    margin-right: 0;
   }
 }
 

@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 export function AppFooter() {
   const year = new Date().getFullYear()
 
@@ -8,9 +10,9 @@ export function AppFooter() {
         <small>Flight deals monitor</small>
       </div>
       <div className="footer-links">
-        <a href="mailto:support@mrflights.app">Support</a>
-        <a href="https://amadeus.com" target="_blank" rel="noreferrer">Amadeus</a>
-        <a href="https://github.com" target="_blank" rel="noreferrer">GitHub</a>
+        <a href="mailto:reuven2408@gmail.com">Support</a>
+        <a href="https://www.google.com/travel/flights" target="_blank" rel="noreferrer">Google Flights</a>
+        <Link to="/how-to-use">How to use</Link>
       </div>
       <div className="footer-copy">© {year} mrFlights</div>
     </footer>

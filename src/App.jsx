@@ -9,6 +9,7 @@ import { ProfilePage } from "./pages/ProfilePage"
 import { NotFoundPage } from "./pages/NotFoundPage"
 import { UserProvider } from "./store/UserContext"
 import { useSessionTracking } from "./hooks/useSessionTracking"
+import { HowToUse } from './cmps/HowToUse'
 
 function SessionTracking() {
   useSessionTracking()
@@ -29,6 +30,7 @@ function App() {
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/login" element={<Navigate to="/auth" replace />} />
               <Route path="/signup" element={<Navigate to="/auth" replace />} />
+              <Route path="/how-to-use" element={<HowToUse />} />
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </main>
