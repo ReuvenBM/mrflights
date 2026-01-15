@@ -50,9 +50,14 @@ export function HomePage() {
 
     socket.on('deals:update', (payload) => {
       if (!payload?.refresh) return
-      const incomingUpdatedAt = payload.updatedAt
+      const incomingUpdatedAt =
+        payload.updatedAt instanceof Date
+          ? payload.updatedAt.getTime()
+          : typeof payload.updatedAt === 'string'
+            ? Date.parse(payload.updatedAt)
+            : payload.updatedAt
       const currentUpdatedAt = snapshotUpdatedAtRef.current
-      if (typeof incomingUpdatedAt === 'number' && typeof currentUpdatedAt === 'number') {
+      if (Number.isFinite(incomingUpdatedAt) && Number.isFinite(currentUpdatedAt)) {
         if (incomingUpdatedAt <= currentUpdatedAt) return
       }
       refreshSnapshot()
@@ -116,9 +121,15 @@ export function HomePage() {
       const nextSnapshots = res?.snapshots || {}
       const updatedAt = res?.updatedAt
       setSnapshots(nextSnapshots)
-      if (typeof updatedAt === 'number') {
-        setSnapshotUpdatedAt(updatedAt)
-        snapshotUpdatedAtRef.current = updatedAt
+      const parsedUpdatedAt =
+        updatedAt instanceof Date
+          ? updatedAt.getTime()
+          : typeof updatedAt === 'string'
+            ? Date.parse(updatedAt)
+            : updatedAt
+      if (Number.isFinite(parsedUpdatedAt)) {
+        setSnapshotUpdatedAt(parsedUpdatedAt)
+        snapshotUpdatedAtRef.current = parsedUpdatedAt
       }
     } catch (err) {
       console.error(err)
