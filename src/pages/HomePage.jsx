@@ -28,6 +28,8 @@ export function HomePage() {
   const snapshotUpdatedAtRef = useRef(null)
   const [loadingStatus, setLoadingStatus] = useState(false)
   const [running, setRunning] = useState(false)
+  const [isPreferencesOpen, setIsPreferencesOpen] = useState(true)
+  const didSetInitialPreferences = useRef(false)
 
   const configPayload = useMemo(() => normalizeConfig(configForm), [configForm])
   const datesList = useMemo(() => (Array.isArray(configForm.dates) ? configForm.dates : parseList(configForm.dates)), [configForm.dates])
@@ -65,6 +67,14 @@ export function HomePage() {
 
     return () => socket.disconnect()
   }, [user])
+
+  useEffect(() => {
+    if (didSetInitialPreferences.current) return
+    if (snapshots === null) return
+    const hasSnapshots = !!(snapshots && Object.keys(snapshots).length)
+    setIsPreferencesOpen(!hasSnapshots)
+    didSetInitialPreferences.current = true
+  }, [snapshots])
 
   function handleConfigChange(ev) {
     const { name, value } = ev.target
@@ -251,6 +261,9 @@ export function HomePage() {
         onChange={handleConfigChange}
         onRun={onRun}
         running={running}
+        isOpen={isPreferencesOpen}
+        onToggle={() => setIsPreferencesOpen((prev) => !prev)}
+        onCollapse={() => setIsPreferencesOpen(false)}
         //canStartSchedule={!!configPayload.intervalMinutes}
       />
 

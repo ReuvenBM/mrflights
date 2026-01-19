@@ -12,6 +12,37 @@ const formatAirportLabel = (code) => {
   return `${airport.label} (${upper})`
 }
 
+const formatDateRangeItem = (start, end) => (start === end ? start : `${start} – ${end}`)
+
+const buildDateItems = (dates) => {
+  const sorted = [...new Set(dates.filter(Boolean))].sort()
+  if (!sorted.length) return []
+
+  const items = []
+  let rangeStart = sorted[0]
+  let prevDate = sorted[0]
+
+  const addDays = (dateStr, days) => {
+    const [year, month, day] = dateStr.split('-').map(Number)
+    const utc = new Date(Date.UTC(year, month - 1, day))
+    utc.setUTCDate(utc.getUTCDate() + days)
+    return utc.toISOString().slice(0, 10)
+  }
+
+  for (let i = 1; i < sorted.length; i += 1) {
+    const current = sorted[i]
+    const expectedNext = addDays(prevDate, 1)
+    if (current !== expectedNext) {
+      items.push(formatDateRangeItem(rangeStart, prevDate))
+      rangeStart = current
+    }
+    prevDate = current
+  }
+
+  items.push(formatDateRangeItem(rangeStart, prevDate))
+  return items
+}
+
 export function SnapshotsList({ snapshots, onDeleteWatchItem, onDeleteRoute }) {
   const [openRouteKey, setOpenRouteKey] = useState(null)
   const [deletingRouteKey, setDeletingRouteKey] = useState(null)
@@ -35,9 +66,10 @@ export function SnapshotsList({ snapshots, onDeleteWatchItem, onDeleteRoute }) {
   return (
     <>
       {Object.entries(groupedSnapshots).map(([routeKey, routeSnapshots]) => {
-        const dates = routeSnapshots.map((s) => s.date).sort()
-        const minDate = dates[0]
-        const maxDate = dates[dates.length - 1]
+        const dates = routeSnapshots.map((s) => s.date)
+        const dateItems = buildDateItems(dates)
+        const visibleItems = dateItems.slice(0, 3)
+        const hasMoreItems = dateItems.length > 3
         const isOpen = openRouteKey === routeKey
         const routeWatchItemIds = routeSnapshots.map((s) => s.watchItemId).filter(Boolean)
         const isDeletingRoute = deletingRouteKey === routeKey
@@ -55,13 +87,34 @@ export function SnapshotsList({ snapshots, onDeleteWatchItem, onDeleteRoute }) {
                 setOpenRouteKey(isOpen ? null : routeKey)
               }}
             >
-              <h3>
-                {formatAirportLabel(routeSnapshots[0]?.route?.origin)} →{' '}
-                {formatAirportLabel(routeSnapshots[0]?.route?.dest)}
-              </h3>
-              <p>
-                {minDate} - {maxDate}
-              </p>
+              <div className="snapshots-routeInfo">
+                <h3>
+                  {formatAirportLabel(routeSnapshots[0]?.route?.origin)} →{' '}
+                  {formatAirportLabel(routeSnapshots[0]?.route?.dest)}
+                </h3>
+                <div className="snapshots-routeDates">
+                  {dateItems.length ? (
+                    <>
+                      {visibleItems.map((item, index) => (
+                        <p className="snapshots-dateLine" key={`${routeKey}-date-${item}`}>
+                          <span className={`snapshots-dateLabel${index === 0 ? '' : ' is-empty'}`}>
+                            Dates:
+                          </span>
+                          <span className="snapshots-dateValue">{item}</span>
+                        </p>
+                      ))}
+                      {hasMoreItems && (
+                        <p className="snapshots-dateLine" key={`${routeKey}-more`}>
+                          <span className="snapshots-dateLabel is-empty">Dates:</span>
+                          <span className="snapshots-dateValue">more</span>
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="snapshots-dateLine">Dates: N/A</p>
+                  )}
+                </div>
+              </div>
               <button
                 type="button"
                 disabled={isDeletingRoute || !routeWatchItemIds.length}

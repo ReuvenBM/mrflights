@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { parseList } from '../services/deals.utils'
 import { getAirportOptions } from '../services/airport.service'
 
@@ -127,7 +127,11 @@ export function SearchPreferencesForm({
   updatingSchedule,
   scheduleSupported,
   canStartSchedule,
+  isOpen,
+  onToggle,
+  onCollapse,
 }) {
+  const panelRef = useRef(null)
   const airportOptions = useMemo(() => {
     const list = getAirportOptions().slice()
     return list.sort((a, b) => {
@@ -143,93 +147,130 @@ export function SearchPreferencesForm({
     })
   }, [])
 
+  useEffect(() => {
+    if (!isOpen) return
+    function handleOutsideClick(ev) {
+      if (!panelRef.current) return
+      if (panelRef.current.contains(ev.target)) return
+      onCollapse?.()
+    }
+
+    document.addEventListener('mousedown', handleOutsideClick)
+    document.addEventListener('touchstart', handleOutsideClick)
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick)
+      document.removeEventListener('touchstart', handleOutsideClick)
+    }
+  }, [isOpen, onCollapse])
+
   return (
-    <section className="panel">
-      <header className="panel-header">
+    <section
+      ref={panelRef}
+      className={`panel search-preferences ${isOpen ? 'open' : 'closed'}`}
+      onClick={() => {
+        if (!isOpen) onToggle?.()
+      }}
+    >
+      <header
+        className="panel-header"
+        role="button"
+        tabIndex={0}
+        onClick={(ev) => {
+          onToggle?.()
+          ev.stopPropagation()
+        }}
+        onKeyDown={(ev) => {
+          if (ev.key !== 'Enter' && ev.key !== ' ') return
+          ev.preventDefault()
+          ev.stopPropagation()
+          onToggle?.()
+        }}
+      >
         <h2>Search Preferences</h2>
       </header>
 
-      <form className="form">
-        <label>
-          Origin
-        </label>
-        <div>
-          <SearchableAirportSelect
-            name="origins"
-            value={configForm.origins || ''}
-            onChange={onChange}
-            options={airportOptions}
-            placeholder="Type a city or code (e.g. Tel Aviv / TLV)"
-          />
-        </div>
-
-        <label>
-          Destination
-        </label>
-        <div>
-          <SearchableAirportSelect
-            name="dests"
-            value={configForm.dests || ''}
-            onChange={onChange}
-            options={airportOptions}
-            placeholder="Type a city or code (e.g. Bangkok / BKK)"
-          />
-        </div>
-
-        <div className="date-picker-row">
+      {isOpen && (
+        <form className="form">
           <label>
-            Date range (start)
-            <input
-              type="date"
-              value={dateRange.start}
-              onChange={(ev) => onDateRangeChange('start', ev.target.value)}
+            Origin
+          </label>
+          <div>
+            <SearchableAirportSelect
+              name="origins"
+              value={configForm.origins || ''}
+              onChange={onChange}
+              options={airportOptions}
+              placeholder="Type a city or code (e.g. Tel Aviv / TLV)"
             />
-          </label>
+          </div>
 
           <label>
-            Date range (end)
-            <input
-              type="date"
-              value={dateRange.end}
-              onChange={(ev) => onDateRangeChange('end', ev.target.value)}
+            Destination
+          </label>
+          <div>
+            <SearchableAirportSelect
+              name="dests"
+              value={configForm.dests || ''}
+              onChange={onChange}
+              options={airportOptions}
+              placeholder="Type a city or code (e.g. Bangkok / BKK)"
             />
-          </label>
+          </div>
 
-          <button type="button" onClick={onAddRange} disabled={!dateRange.start || !dateRange.end}>
-            Add range
-          </button>
-        </div>
+          <div className="date-picker-row">
+            <label>
+              Date range (start)
+              <input
+                type="date"
+                value={dateRange.start}
+                onChange={(ev) => onDateRangeChange('start', ev.target.value)}
+              />
+            </label>
 
-        <div className="chips">
-          {(Array.isArray(datesList) ? datesList : parseList(datesList)).map((d) => (
-            <span className="chip" key={d}>
-              {d}
-              <button type="button" onClick={() => onRemoveDate(d)}>×</button>
-            </span>
-          ))}
+            <label>
+              Date range (end)
+              <input
+                type="date"
+                value={dateRange.end}
+                onChange={(ev) => onDateRangeChange('end', ev.target.value)}
+              />
+            </label>
 
-          {(!datesList || (Array.isArray(datesList) && datesList.length === 0)) && (
-            <span className="hint">Add at least one date</span>
-          )}
-        </div>
+            <button type="button" onClick={onAddRange} disabled={!dateRange.start || !dateRange.end}>
+              Add range
+            </button>
+          </div>
 
-        <div className="triple">
-          <label>
-            Max nonstop $
-            <input name="maxNonstop" type="number" min="0" value={configForm.maxNonstop} onChange={onChange} />
-          </label>
+          <div className="chips">
+            {(Array.isArray(datesList) ? datesList : parseList(datesList)).map((d) => (
+              <span className="chip" key={d}>
+                {d}
+                <button type="button" onClick={() => onRemoveDate(d)}>×</button>
+              </span>
+            ))}
 
-          <label>
-            Max one-stop $
-            <input name="maxOnestop" type="number" min="0" value={configForm.maxOnestop} onChange={onChange} />
-          </label>
+            {(!datesList || (Array.isArray(datesList) && datesList.length === 0)) && (
+              <span className="hint">Add at least one date</span>
+            )}
+          </div>
 
-          <label>
-            Max hours
-            <input name="maxHours" type="number" min="1" value={configForm.maxHours} onChange={onChange} />
-          </label>
+          <div className="triple">
+            <label>
+              Max nonstop $
+              <input name="maxNonstop" type="number" min="0" value={configForm.maxNonstop} onChange={onChange} />
+            </label>
 
-          {/* <label>
+            <label>
+              Max one-stop $
+              <input name="maxOnestop" type="number" min="0" value={configForm.maxOnestop} onChange={onChange} />
+            </label>
+
+            <label>
+              Max hours
+              <input name="maxHours" type="number" min="1" value={configForm.maxHours} onChange={onChange} />
+            </label>
+
+            {/* <label>
             Interval (minutes)
             <input
               name="intervalMinutes"
@@ -239,14 +280,21 @@ export function SearchPreferencesForm({
               onChange={onChange}
             />
           </label> */}
-        </div>
+          </div>
 
-        <div className="actions">
-          <button type="button" onClick={onRun} disabled={running}>
-            {running ? 'Running…' : 'Run now'}
-          </button>
+          <div className="actions">
+            <button
+              type="button"
+              onClick={() => {
+                onRun?.()
+                onCollapse?.()
+              }}
+              disabled={running}
+            >
+              {running ? 'Running…' : 'Run now'}
+            </button>
 
-          {/* {scheduleSupported && (
+            {/* {scheduleSupported && (
             <>
               <button type="button" onClick={onStartSchedule} disabled={updatingSchedule || !canStartSchedule}>
                 {updatingSchedule ? 'Working…' : 'Start schedule'}
@@ -257,8 +305,9 @@ export function SearchPreferencesForm({
               </button>
             </>
           )} */}
-        </div>
-      </form>
+          </div>
+        </form>
+      )}
     </section>
   )
 }
