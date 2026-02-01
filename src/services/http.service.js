@@ -1,8 +1,10 @@
-const BASE_URL = '/api'
+const BASE_URL = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL.replace(/\/+$/, '')}/api`
+  : '/api'
 export const httpService = { get, post, put, del }
 
 function get(resource, params) {
-  const url = new URL(`${BASE_URL}/${resource}`, window.location.origin)
+  const url = _buildUrl(resource)
   if (params) Object.entries(params).forEach(([k, v]) => {
     if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, v)
   })
@@ -10,7 +12,7 @@ function get(resource, params) {
 }
 
 function post(resource, data) {
-  return _request(`${BASE_URL}/${resource}`, {
+  return _request(_buildUrl(resource), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
@@ -18,7 +20,7 @@ function post(resource, data) {
 }
 
 function put(resource, data) {
-  return _request(`${BASE_URL}/${resource}`, {
+  return _request(_buildUrl(resource), {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
@@ -26,7 +28,15 @@ function put(resource, data) {
 }
 
 function del(resource) {
-  return _request(`${BASE_URL}/${resource}`, { method: 'DELETE' })
+  return _request(_buildUrl(resource), { method: 'DELETE' })
+}
+
+function _buildUrl(resource) {
+  const path = `${BASE_URL}/${resource}`
+  if (BASE_URL.startsWith('http://') || BASE_URL.startsWith('https://')) {
+    return new URL(path)
+  }
+  return new URL(path, window.location.origin)
 }
 
 async function _request(input, options) {
