@@ -39,34 +39,34 @@ export function HomePage() {
     refreshSnapshot()
   }, [user])
 
-  useEffect(() => {
-    if (!user) return
+  // useEffect(() => {
+  //   if (!user) return
 
-    const socket = io({
-      withCredentials: true,
-    })
+  //   const socket = io({
+  //     withCredentials: true,
+  //   })
 
-    socket.on('connect', () => {
-      if (user?._id) socket.emit('register-user', user._id)
-    })
+  //   socket.on('connect', () => {
+  //     if (user?._id) socket.emit('register-user', user._id)
+  //   })
 
-    socket.on('deals:update', (payload) => {
-      if (!payload?.refresh) return
-      const incomingUpdatedAt =
-        payload.updatedAt instanceof Date
-          ? payload.updatedAt.getTime()
-          : typeof payload.updatedAt === 'string'
-            ? Date.parse(payload.updatedAt)
-            : payload.updatedAt
-      const currentUpdatedAt = snapshotUpdatedAtRef.current
-      if (Number.isFinite(incomingUpdatedAt) && Number.isFinite(currentUpdatedAt)) {
-        if (incomingUpdatedAt <= currentUpdatedAt) return
-      }
-      refreshSnapshot()
-    })
+  //   socket.on('deals:update', (payload) => {
+  //     if (!payload?.refresh) return
+  //     const incomingUpdatedAt =
+  //       payload.updatedAt instanceof Date
+  //         ? payload.updatedAt.getTime()
+  //         : typeof payload.updatedAt === 'string'
+  //           ? Date.parse(payload.updatedAt)
+  //           : payload.updatedAt
+  //     const currentUpdatedAt = snapshotUpdatedAtRef.current
+  //     if (Number.isFinite(incomingUpdatedAt) && Number.isFinite(currentUpdatedAt)) {
+  //       if (incomingUpdatedAt <= currentUpdatedAt) return
+  //     }
+  //     refreshSnapshot()
+  //   })
 
-    return () => socket.disconnect()
-  }, [user])
+  //   return () => socket.disconnect()
+  // }, [user])
 
   useEffect(() => {
     if (didSetInitialPreferences.current) return
