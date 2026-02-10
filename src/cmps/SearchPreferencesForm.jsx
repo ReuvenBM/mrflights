@@ -254,7 +254,7 @@ export function SearchPreferencesForm({
             )}
           </div>
 
-          <div className="triple">
+          {/* <div className="triple">
             <label>
               Max nonstop $
               <input name="maxNonstop" type="number" min="0" value={configForm.maxNonstop} onChange={onChange} />
@@ -269,18 +269,7 @@ export function SearchPreferencesForm({
               Max hours
               <input name="maxHours" type="number" min="1" value={configForm.maxHours} onChange={onChange} />
             </label>
-
-            {/* <label>
-            Interval (minutes)
-            <input
-              name="intervalMinutes"
-              type="number"
-              min="1"
-              value={configForm.intervalMinutes}
-              onChange={onChange}
-            />
-          </label> */}
-          </div>
+          </div> */}
 
           <div className="actions">
             <button

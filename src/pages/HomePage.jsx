@@ -8,7 +8,9 @@ import { parseList, generateDatesBetween } from '../services/deals.utils'
 import { io } from 'socket.io-client'
 import { Algorithm } from '../cmps/Algorithm'
 import { SnapshotsList } from '../cmps/SnapshotsList'
-import { MatchesSection } from '../cmps/MatchesSection'
+
+const SNAPSHOT_POLL_MAX_ATTEMPTS = 8
+const SNAPSHOT_POLL_INTERVAL_MS = 1500
 
 export function HomePage() {
   const { user, userLoading } = useUser()
@@ -77,12 +79,30 @@ export function HomePage() {
     didSetInitialPreferences.current = true
   }, [snapshots])
 
+  function clearSnapshotState() {
+    setSnapshots(null)
+    setSnapshotUpdatedAt(null)
+    snapshotUpdatedAtRef.current = null
+  }
+
   function handleConfigChange(ev) {
     const { name, value } = ev.target
+    if (
+      name === 'origins' ||
+      name === 'dests' ||
+      name === 'dates' ||
+      name === 'currency' ||
+      name === 'maxNonstop' ||
+      name === 'maxOnestop' ||
+      name === 'maxHours'
+    ) {
+      clearSnapshotState()
+    }
     setConfigForm((prev) => ({ ...prev, [name]: value }))
   }
 
   function onRemoveDate(date) {
+    clearSnapshotState()
     setConfigForm((prev) => {
       const list = Array.isArray(prev.dates) ? prev.dates : parseList(prev.dates)
       return { ...prev, dates: list.filter((d) => d !== date) }
@@ -103,6 +123,7 @@ export function HomePage() {
 
   function addDates(list) {
     if (!list.length) return
+    clearSnapshotState()
     setConfigForm((prev) => {
       const existing = new Set(Array.isArray(prev.dates) ? prev.dates : parseList(prev.dates))
       list.forEach((d) => existing.add(d))
@@ -125,33 +146,59 @@ export function HomePage() {
     }
   }
 
-  async function refreshSnapshot() {
+  async function refreshSnapshot(options = {}) {
+    const { onlyIfNewerThan } = options
+    const mustBeNewer = Number.isFinite(onlyIfNewerThan)
+
     try {
       const res = await dealsService.getSnapshot()
       if (res?.ok === false) throw new Error(res.error || 'Snapshot error')
       const nextSnapshots = res?.snapshots || {}
       const updatedAt = res?.updatedAt
-      setSnapshots(nextSnapshots)
       const parsedUpdatedAt =
         updatedAt instanceof Date
           ? updatedAt.getTime()
           : typeof updatedAt === 'string'
             ? Date.parse(updatedAt)
             : updatedAt
+
+      const isNewerSnapshot = Number.isFinite(parsedUpdatedAt) && parsedUpdatedAt > onlyIfNewerThan
+      if (!mustBeNewer || isNewerSnapshot) {
+        setSnapshots(nextSnapshots)
+      }
+
       if (Number.isFinite(parsedUpdatedAt)) {
         setSnapshotUpdatedAt(parsedUpdatedAt)
         snapshotUpdatedAtRef.current = parsedUpdatedAt
       }
+
+      return {
+        updatedAt: Number.isFinite(parsedUpdatedAt) ? parsedUpdatedAt : null,
+        didAdvance: mustBeNewer ? isNewerSnapshot : Number.isFinite(parsedUpdatedAt)
+      }
     } catch (err) {
       console.error(err)
       showErrorMsg(err.message || 'Snapshot error')
+      return { updatedAt: null, didAdvance: false }
     }
+  }
+
+  async function pollForNewerSnapshot(previousUpdatedAt) {
+    for (let attempt = 0; attempt < SNAPSHOT_POLL_MAX_ATTEMPTS; attempt += 1) {
+      const { didAdvance } = await refreshSnapshot({ onlyIfNewerThan: previousUpdatedAt })
+      if (didAdvance) return true
+      if (attempt < SNAPSHOT_POLL_MAX_ATTEMPTS - 1) {
+        await new Promise((resolve) => setTimeout(resolve, SNAPSHOT_POLL_INTERVAL_MS))
+      }
+    }
+    return false
   }
 
   async function onRun() {
     //console.log('onRun clicked, configPayload =', configPayload)
     setRunning(true)
     try {
+      const previousSnapshotUpdatedAt = snapshotUpdatedAtRef.current
       const watchItemPayload = buildWatchItemPayload(configPayload)
       console.log(watchItemPayload)
       const res = await dealsService.runOnce(watchItemPayload)
@@ -159,6 +206,7 @@ export function HomePage() {
       if (!res?.runId) throw new Error('Run failed')
       showSuccessMsg('Run started')
       await refreshStatus()
+      await pollForNewerSnapshot(previousSnapshotUpdatedAt)
       //await refreshSchedule()
     } catch (err) {
       console.error(err)
@@ -268,13 +316,6 @@ export function HomePage() {
         onToggle={() => setIsPreferencesOpen((prev) => !prev)}
         onCollapse={() => setIsPreferencesOpen(false)}
         //canStartSchedule={!!configPayload.intervalMinutes}
-      />
-
-      <MatchesSection
-        snapshots={snapshots}
-        maxNonstop={configPayload.maxNonstop}
-        maxOnestop={configPayload.maxOnestop}
-        maxHours={configPayload.maxHours}
       />
 
       <SnapshotsList
