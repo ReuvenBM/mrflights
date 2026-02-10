@@ -8,6 +8,7 @@ import { parseList, generateDatesBetween } from '../services/deals.utils'
 import { io } from 'socket.io-client'
 import { Algorithm } from '../cmps/Algorithm'
 import { SnapshotsList } from '../cmps/SnapshotsList'
+import { MatchesSection } from '../cmps/MatchesSection'
 
 export function HomePage() {
   const { user, userLoading } = useUser()
@@ -269,7 +270,18 @@ export function HomePage() {
         //canStartSchedule={!!configPayload.intervalMinutes}
       />
 
-      <SnapshotsList snapshots={snapshots} onDeleteWatchItem={onDeleteWatchItem} onDeleteRoute={onDeleteRoute} />
+      <MatchesSection
+        snapshots={snapshots}
+        maxNonstop={configPayload.maxNonstop}
+        maxOnestop={configPayload.maxOnestop}
+        maxHours={configPayload.maxHours}
+      />
+
+      <SnapshotsList
+        snapshots={snapshots}
+        onDeleteWatchItem={onDeleteWatchItem}
+        onDeleteRoute={onDeleteRoute}
+      />
     </main>
   )
 }

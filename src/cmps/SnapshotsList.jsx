@@ -43,7 +43,11 @@ const buildDateItems = (dates) => {
   return items
 }
 
-export function SnapshotsList({ snapshots, onDeleteWatchItem, onDeleteRoute }) {
+export function SnapshotsList({
+  snapshots,
+  onDeleteWatchItem,
+  onDeleteRoute,
+}) {
   const [openRouteKey, setOpenRouteKey] = useState(null)
   const [deletingRouteKey, setDeletingRouteKey] = useState(null)
   const [deletingWatchItems, setDeletingWatchItems] = useState({})
@@ -136,11 +140,12 @@ export function SnapshotsList({ snapshots, onDeleteWatchItem, onDeleteRoute }) {
             {isOpen && (
               <div className="snapshots-dates">
                 {routeSnapshots.map((snapshot) => {
+                  const options = Array.isArray(snapshot.options) ? snapshot.options : []
                   const cheapestOption =
-                    Array.isArray(snapshot.options) && snapshot.options.length
-                      ? snapshot.options.reduce(
+                    options.length
+                      ? options.reduce(
                         (min, opt) => (opt.price < min.price ? opt : min),
-                        snapshot.options[0]
+                        options[0]
                       )
                       : null
 
@@ -194,9 +199,9 @@ export function SnapshotsList({ snapshots, onDeleteWatchItem, onDeleteRoute }) {
                         </div>
                       </div>
 
-                      {Array.isArray(snapshot.options) && snapshot.options.length ? (
+                      {options.length ? (
                         <ul className="snapshot-options">
-                          {snapshot.options.map((option) => (
+                          {options.map((option) => (
                             <li className="snapshot-option" key={option.key}>
                               <span className="opt-price">
                                 {option.price} {option.currency}
