@@ -71,6 +71,20 @@ export function formatVal(val) {
   }
   return String(val)
 }
+
+export function buildGoogleFlightsLink(deal) {
+  if (!deal) return null
+
+  const { origin, dest, date } = deal
+  if (!origin || !dest || !date) return null
+
+  const ymd = String(date).slice(0, 10)
+  const curr = (deal.currency || 'USD').toString().trim()
+  const q = `Flights from ${origin} to ${dest} on ${ymd} oneway`
+
+  return `https://www.google.com/travel/flights?q=${encodeURIComponent(q)}&curr=${encodeURIComponent(curr)}`
+}
+
 // Build a smart outbound link for a specific flight deal
 // Tries airline direct search, falls back to Google Flights
 export function buildFlightLink(deal) {
@@ -195,9 +209,7 @@ export function buildFlightLink(deal) {
     JQ: (o, d, dt) => `https://www.jetstar.com/au/en/flight-search?origin=${o}&destination=${d}&departureDate=${dt}`,
   }
 
-  const curr = (deal.currency || 'USD').toString().trim()
-  const q = `Flights from ${origin} to ${dest} on ${ymd} oneway`
-  const gf = `https://www.google.com/travel/flights?q=${encodeURIComponent(q)}&curr=${encodeURIComponent(curr)}`
+  const gf = buildGoogleFlightsLink(deal)
 
   const links = []
 
@@ -209,7 +221,7 @@ export function buildFlightLink(deal) {
     })
   }
 
-  links.push({ url: gf, label: 'Show in google flights', source: 'GF' })
+  if (gf) links.push({ url: gf, label: 'Show in google flights', source: 'GF' })
 
   return links
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { AIRPORT_OPTIONS, buildAirportMap } from '../services/airport.service'
+import { buildGoogleFlightsLink } from '../services/deals.utils'
 
 const airportByCode = buildAirportMap(AIRPORT_OPTIONS)
 
@@ -201,22 +202,35 @@ export function SnapshotsList({
 
                       {options.length ? (
                         <ul className="snapshot-options">
-                          {options.map((option) => (
-                            <li className="snapshot-option" key={option.key}>
-                              <span className="opt-price">
-                                {option.price} {option.currency}
-                              </span>
-                              <span className="opt-stops">
-                                stops: {option.stops}
-                              </span>
-                              <span className="opt-carriers">
-                                carriers: {option.carriers}
-                              </span>
-                              <span className="opt-times">
-                                {option.dep} → {option.arr}
-                              </span>
-                            </li>
-                          ))}
+                          {options.map((option) => {
+                            const googleFlightsUrl = buildGoogleFlightsLink(option)
+
+                            return (
+                              <li className="snapshot-option" key={option.key}>
+                                <span className="opt-price">
+                                  {option.price} {option.currency}
+                                </span>
+                                <span className="opt-stops">
+                                  stops: {option.stops}
+                                </span>
+                                <span className="opt-carriers">
+                                  carriers: {option.carriers}
+                                </span>
+                                <span className="opt-times">
+                                  {option.dep} → {option.arr}
+                                </span>
+                                {googleFlightsUrl && (
+                                  <a
+                                    href={googleFlightsUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                  >
+                                    Google Flights
+                                  </a>
+                                )}
+                              </li>
+                            )
+                          })}
                         </ul>
                       ) : (
                         <p>No options</p>
