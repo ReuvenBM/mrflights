@@ -95,7 +95,6 @@ export function HomePage() {
     if (
       name === 'origins' ||
       name === 'dests' ||
-      name === 'dates' ||
       name === 'currency' ||
       name === 'maxNonstop' ||
       name === 'maxOnestop' ||
@@ -107,7 +106,6 @@ export function HomePage() {
   }
 
   function onRemoveDate(date) {
-    clearSnapshotState()
     setConfigForm((prev) => {
       const list = Array.isArray(prev.dates) ? prev.dates : parseList(prev.dates)
       return { ...prev, dates: list.filter((d) => d !== date) }
@@ -128,7 +126,6 @@ export function HomePage() {
 
   function addDates(list) {
     if (!list.length) return
-    clearSnapshotState()
     setConfigForm((prev) => {
       const existing = new Set(Array.isArray(prev.dates) ? prev.dates : parseList(prev.dates))
       list.forEach((d) => existing.add(d))
