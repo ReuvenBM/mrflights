@@ -102,8 +102,26 @@
 
 .snapshots-routeDates {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.route-dateChip {
+  width: fit-content;
+  padding: 4px 8px;
+  border: 1px solid #e0e8f2;
+  border-radius: 999px;
+  background: #f8fbff;
+  color: #314054;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.route-dateChip.is-more,
+.route-dateChip.is-empty {
+  color: #657386;
 }
 
 .snapshots-dateLine {
@@ -884,6 +902,12 @@ button:disabled {
 .search-preferences .panel-header {
   padding: 0 0 14px;
   border-bottom: 1px solid #edf2f7;
+  outline: none;
+}
+
+.search-preferences .panel-header:focus-visible {
+  border-radius: 12px;
+  box-shadow: 0 0 0 3px rgba(47, 107, 255, 0.14);
 }
 
 .search-preferences.closed {
@@ -946,9 +970,123 @@ button:disabled {
   gap: 12px;
 }
 
-.date-picker-row {
+.date-panelHeader span {
+  color: #243449;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.custom-datePicker {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  grid-template-columns: minmax(280px, 420px) minmax(220px, 1fr);
+  align-items: start;
+  gap: 10px;
+}
+
+.date-calendar {
+  display: grid;
+  gap: 10px;
+}
+
+.date-pickerToolbar {
+  display: grid;
+  grid-template-columns: 34px 1fr 34px;
+  align-items: center;
+  gap: 8px;
+}
+
+.date-pickerToolbar strong {
+  color: #142033;
+  font-size: 15px;
+  text-align: center;
+}
+
+.date-navBtn {
+  min-height: 34px;
+  padding: 0;
+  border-radius: 10px;
+  background: #fff;
+  color: #2f6bff;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.date-weekdays,
+.date-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.date-weekdays span {
+  color: #657386;
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.date-day {
+  min-height: 34px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: #fff;
+  color: #243449;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.date-day.is-muted {
+  color: #a4afbd;
+  background: #fbfdff;
+}
+
+.date-day.is-range {
+  background: #eef4ff;
+  color: #2f6bff;
+}
+
+.date-day.is-start,
+.date-day.is-end {
+  background: #2f6bff;
+  color: #fff;
+}
+
+.date-rangeSummary {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.date-summaryItem {
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  border: 1px solid #dbe6ff;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.date-summaryItem span {
+  color: #657386;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.date-summaryItem strong {
+  color: #243449;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.date-rangeSummary button {
+  min-height: 38px;
+  padding: 8px 10px;
+  border-color: #e0e8f2;
+  background: #fff;
+  color: #657386;
 }
 
 .search-actions {
@@ -1059,6 +1197,36 @@ button:disabled {
   font-weight: 700;
 }
 
+.route-recommendation {
+  width: fit-content;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #f6f8fb;
+  border: 1px solid #e3e9f0;
+  color: #2f3a4a;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.route-recommendation.recommendation-buy,
+.route-recommendation.recommendation-good-deal {
+  background: #f0faf4;
+  border-color: #cfeedd;
+  color: #227a52;
+}
+
+.route-recommendation.recommendation-wait {
+  background: #fff9ed;
+  border-color: #f5e2bc;
+  color: #8a6416;
+}
+
+.route-recommendation.recommendation-watch {
+  background: #f3f7ff;
+  border-color: #dbe6ff;
+  color: #315fb8;
+}
+
 .ghost-danger,
 .snapshot-deleteBtn {
   border-color: #f0c7c7;
@@ -1097,6 +1265,7 @@ button:disabled {
 }
 
 .snapshot-minPrice small,
+.snapshot-recommendation small,
 .snapshot-option small {
   color: #657386;
   font-size: 11px;
@@ -1135,6 +1304,34 @@ button:disabled {
   font-weight: 900;
 }
 
+.snapshot-recommendation {
+  display: grid;
+  gap: 1px;
+  width: fit-content;
+  padding: 6px 8px;
+  border-radius: 999px;
+  background: #f3f7fb;
+  color: #2f3a4a;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.snapshot-recommendation.recommendation-buy,
+.snapshot-recommendation.recommendation-good-deal {
+  background: #eaf8f0;
+  color: #18794e;
+}
+
+.snapshot-recommendation.recommendation-wait {
+  background: #fff7e8;
+  color: #986a12;
+}
+
+.snapshot-recommendation.recommendation-watch {
+  background: #eef4ff;
+  color: #2f6bff;
+}
+
 .snapshot-option a {
   justify-self: end;
   padding: 8px 10px;
@@ -1153,6 +1350,10 @@ button:disabled {
 
   .dashboard-stats {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .custom-datePicker {
+    grid-template-columns: 1fr;
   }
 
   .snapshots-routeHeader,

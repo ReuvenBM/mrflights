@@ -14,7 +14,57 @@ const formatAirportLabel = (code) => {
   return `${airport.label} (${upper})`
 }
 
-const formatDateRangeItem = (start, end) => (start === end ? start : `${start} – ${end}`)
+const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+const formatRouteDateChip = (dateStr) => {
+  const [year, month, day] = String(dateStr || '').split('-').map(Number)
+  if (!year || !month || !day) return String(dateStr || '')
+  return `${MONTH_LABELS[month - 1]} ${day}`
+}
+
+const formatSnapshotDate = (dateStr) => {
+  const [year, month, day] = String(dateStr || '').split('-').map(Number)
+  if (!year || !month || !day) return String(dateStr || '')
+  const date = new Date(Date.UTC(year, month - 1, day))
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  })
+}
+
+const RECOMMENDATION_LABELS = {
+  BUY: 'Buy now',
+  GOOD_DEAL: 'Good deal',
+  WAIT: 'Wait',
+  WATCH: 'Watch',
+}
+
+const RECOMMENDATION_ORDER = ['BUY', 'GOOD_DEAL', 'WATCH', 'WAIT']
+
+const ROUTE_RECOMMENDATION_TEXT = {
+  BUY: 'Buy now',
+  GOOD_DEAL: 'Good deal',
+  WATCH: 'Worth watching',
+  WAIT: 'Wait',
+}
+
+const formatRecommendationAction = (action) => {
+  const key = String(action || '').trim().toUpperCase()
+  if (!key) return ''
+  if (RECOMMENDATION_LABELS[key]) return RECOMMENDATION_LABELS[key]
+  return key
+    .toLowerCase()
+    .split('_')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
+}
+
+const getRecommendationClass = (action) => {
+  const key = String(action || '').trim().toLowerCase().replaceAll('_', '-')
+  return key ? ` recommendation-${key}` : ''
+}
 
 const formatCarriers = (carriers, fallback = '—') => {
   if (!carriers) return fallback
@@ -128,37 +178,11 @@ const formatOptionCarriers = (option) => {
   ]))
 }
 
-const buildDateItems = (dates) => {
-  const sorted = [...new Set(dates.filter(Boolean))].sort()
-  if (!sorted.length) return []
-
-  const items = []
-  let rangeStart = sorted[0]
-  let prevDate = sorted[0]
-
-  const addDays = (dateStr, days) => {
-    const [year, month, day] = dateStr.split('-').map(Number)
-    const utc = new Date(Date.UTC(year, month - 1, day))
-    utc.setUTCDate(utc.getUTCDate() + days)
-    return utc.toISOString().slice(0, 10)
-  }
-
-  for (let i = 1; i < sorted.length; i += 1) {
-    const current = sorted[i]
-    const expectedNext = addDays(prevDate, 1)
-    if (current !== expectedNext) {
-      items.push(formatDateRangeItem(rangeStart, prevDate))
-      rangeStart = current
-    }
-    prevDate = current
-  }
-
-  items.push(formatDateRangeItem(rangeStart, prevDate))
-  return items
-}
+const buildRouteDateItems = (dates) => [...new Set(dates.filter(Boolean))].sort()
 
 export function SnapshotsList({
   snapshots,
+  watchItems,
   onDeleteWatchItem,
   onDeleteRoute,
 }) {
@@ -172,6 +196,31 @@ export function SnapshotsList({
     acc[routeKey].push(snapshot)
     return acc
   }, {})
+
+  const recommendationsByWatchItemId = (Array.isArray(watchItems) ? watchItems : []).reduce((acc, item) => {
+    if (item?._id && item?.recommendation) acc[String(item._id)] = item.recommendation
+    return acc
+  }, {})
+
+  const getSnapshotRecommendation = (snapshot) => (
+    snapshot?.watchItemId
+      ? recommendationsByWatchItemId[String(snapshot.watchItemId)]
+      : null
+  )
+
+  const getRouteRecommendation = (routeSnapshots) => {
+    const actions = routeSnapshots
+      .map((snapshot) => String(getSnapshotRecommendation(snapshot)?.action || '').trim().toUpperCase())
+      .filter(Boolean)
+
+    const action = RECOMMENDATION_ORDER.find((item) => actions.includes(item)) || actions.sort()[0]
+    if (!action) return null
+
+    return {
+      action,
+      text: ROUTE_RECOMMENDATION_TEXT[action] || `Recommendation: ${formatRecommendationAction(action)}`,
+    }
+  }
 
   if (!snapshots || !Object.keys(snapshots).length) {
     return (
@@ -195,12 +244,13 @@ export function SnapshotsList({
 
       {Object.entries(groupedSnapshots).map(([routeKey, routeSnapshots]) => {
         const dates = routeSnapshots.map((s) => s.date)
-        const dateItems = buildDateItems(dates)
-        const visibleItems = dateItems.slice(0, 3)
-        const hasMoreItems = dateItems.length > 3
+        const dateItems = buildRouteDateItems(dates)
+        const visibleItems = dateItems.slice(0, 2)
+        const hiddenItemsCount = Math.max(dateItems.length - visibleItems.length, 0)
         const isOpen = openRouteKey === routeKey
         const routeWatchItemIds = routeSnapshots.map((s) => s.watchItemId).filter(Boolean)
         const isDeletingRoute = deletingRouteKey === routeKey
+        const routeRecommendation = getRouteRecommendation(routeSnapshots)
         const routeMinPrice = routeSnapshots.reduce((min, snapshot) => {
           if (snapshot.minPrice == null) return min
           return min == null || snapshot.minPrice < min ? snapshot.minPrice : min
@@ -225,27 +275,28 @@ export function SnapshotsList({
                   {formatAirportLabel(routeSnapshots[0]?.route?.origin)} →{' '}
                   {formatAirportLabel(routeSnapshots[0]?.route?.dest)}
                 </h3>
+                {routeRecommendation && (
+                  <p className={`route-recommendation${getRecommendationClass(routeRecommendation.action)}`}>
+                    {routeRecommendation.text}
+                  </p>
+                )}
                 {!isOpen && (
-                  <div className="snapshots-routeDates">
-                    {dateItems.length ? (
+                  <div className="snapshots-routeDates" aria-label="Travel dates">
+                    {visibleItems.length ? (
                       <>
-                        {visibleItems.map((item, index) => (
-                          <p className="snapshots-dateLine" key={`${routeKey}-date-${item}`}>
-                            <span className={`snapshots-dateLabel${index === 0 ? '' : ' is-empty'}`}>
-                              Dates:
-                            </span>
-                            <span className="snapshots-dateValue">{item}</span>
-                          </p>
+                        {visibleItems.map((item) => (
+                          <span className="route-dateChip" key={`${routeKey}-date-${item}`}>
+                            {formatRouteDateChip(item)}
+                          </span>
                         ))}
-                        {hasMoreItems && (
-                          <p className="snapshots-dateLine" key={`${routeKey}-more`}>
-                            <span className="snapshots-dateLabel is-empty">Dates:</span>
-                            <span className="snapshots-dateValue">more</span>
-                          </p>
+                        {hiddenItemsCount > 0 && (
+                          <span className="route-dateChip is-more">
+                            +{hiddenItemsCount} date{hiddenItemsCount === 1 ? '' : 's'}
+                          </span>
                         )}
                       </>
                     ) : (
-                      <p className="snapshots-dateLine">Dates: N/A</p>
+                      <span className="route-dateChip is-empty">No dates</span>
                     )}
                   </div>
                 )}
@@ -280,6 +331,9 @@ export function SnapshotsList({
               <div className="snapshots-dates">
                 {routeSnapshots.map((snapshot) => {
                   const options = Array.isArray(snapshot.options) ? snapshot.options : []
+                  const recommendation = getSnapshotRecommendation(snapshot)
+                  const recommendationAction = recommendation?.action
+                  const recommendationLabel = formatRecommendationAction(recommendationAction)
                   const cheapestOption =
                     options.length
                       ? options.reduce(
@@ -293,9 +347,15 @@ export function SnapshotsList({
                       <div className="snapshot-cardHeader">
                         <div>
                           <span className="panel-kicker">Travel date</span>
-                          <h4 className="snapshot-date">{snapshot.date}</h4>
+                          <h4 className="snapshot-date">{formatSnapshotDate(snapshot.date)}</h4>
                         </div>
                         <div className="snapshot-meta">
+                          {recommendationLabel && (
+                            <span className={`snapshot-recommendation${getRecommendationClass(recommendationAction)}`}>
+                              <small>Decision</small>
+                              {recommendationLabel}
+                            </span>
+                          )}
                           <span className="snapshot-minPrice">
                             <small>Min price</small>
                             {snapshot.minPrice != null

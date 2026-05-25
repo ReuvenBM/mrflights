@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { dealsService } from '../services/deals.service'
+import { watchItemService } from '../services/watchItem.service'
 import { showErrorMsg, showSuccessMsg } from '../services/event-bus.service'
 import { useUser } from '../store/UserContext'
 import { Link } from 'react-router-dom'
@@ -25,6 +26,7 @@ export function HomePage() {
   const [dateRange, setDateRange] = useState({ start: '', end: '' })
   const [, setStatus] = useState(null)
   const [snapshots, setSnapshots] = useState(null)
+  const [watchItems, setWatchItems] = useState([])
   const [, setSnapshotUpdatedAt] = useState(null)
   const snapshotUpdatedAtRef = useRef(null)
   const [, setLoadingStatus] = useState(false)
@@ -41,6 +43,7 @@ export function HomePage() {
     if (!user) return
     refreshStatus()
     refreshSnapshot()
+    refreshWatchItems()
   }, [user])
 
   // useEffect(() => {
@@ -82,6 +85,7 @@ export function HomePage() {
 
   function clearSnapshotState() {
     setSnapshots(null)
+    setWatchItems([])
     setSnapshotUpdatedAt(null)
     snapshotUpdatedAtRef.current = null
   }
@@ -184,6 +188,17 @@ export function HomePage() {
     }
   }
 
+  async function refreshWatchItems() {
+    try {
+      const res = await watchItemService.query({ status: 'ACTIVE', limit: 500, page: 1 })
+      if (res?.ok === false) throw new Error(res.error || 'Watch items error')
+      setWatchItems(Array.isArray(res?.watchItems) ? res.watchItems : [])
+    } catch (err) {
+      console.error(err)
+      showErrorMsg(err.message || 'Watch items error')
+    }
+  }
+
   async function pollForNewerSnapshot(previousUpdatedAt) {
     for (let attempt = 0; attempt < SNAPSHOT_POLL_MAX_ATTEMPTS; attempt += 1) {
       const { didAdvance } = await refreshSnapshot({ onlyIfNewerThan: previousUpdatedAt })
@@ -208,6 +223,7 @@ export function HomePage() {
       showSuccessMsg('Run started')
       await refreshStatus()
       await pollForNewerSnapshot(previousSnapshotUpdatedAt)
+      await refreshWatchItems()
       //await refreshSchedule()
     } catch (err) {
       console.error(err)
@@ -223,6 +239,7 @@ export function HomePage() {
       const res = await dealsService.deleteWatchItem(watchItemId)
       if (res?.ok === false) throw new Error(res.error || 'Delete failed')
       await refreshSnapshot()
+      await refreshWatchItems()
     } catch (err) {
       console.error(err)
       showErrorMsg(err.message || 'Delete failed')
@@ -237,6 +254,7 @@ export function HomePage() {
       const failed = results.find((res) => res?.ok === false)
       if (failed) throw new Error(failed.error || 'Delete failed')
       await refreshSnapshot()
+      await refreshWatchItems()
     } catch (err) {
       console.error(err)
       showErrorMsg(err.message || 'Delete failed')
@@ -337,6 +355,7 @@ export function HomePage() {
 
       <SnapshotsList
         snapshots={snapshots}
+        watchItems={watchItems}
         onDeleteWatchItem={onDeleteWatchItem}
         onDeleteRoute={onDeleteRoute}
       />

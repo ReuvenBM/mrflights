@@ -2,6 +2,152 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { parseList } from '../services/deals.utils'
 import { getAirportOptions } from '../services/airport.service'
 
+const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+const WEEKDAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+
+function toDateKey(date) {
+  return date.toISOString().slice(0, 10)
+}
+
+function parseDateKey(dateKey) {
+  const [year, month, day] = String(dateKey || '').split('-').map(Number)
+  if (!year || !month || !day) return null
+  return new Date(Date.UTC(year, month - 1, day))
+}
+
+function formatDateLabel(dateKey) {
+  const date = parseDateKey(dateKey)
+  if (!date) return ''
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+function buildCalendarDays(monthDate) {
+  const year = monthDate.getUTCFullYear()
+  const month = monthDate.getUTCMonth()
+  const first = new Date(Date.UTC(year, month, 1))
+  const start = new Date(first)
+  start.setUTCDate(first.getUTCDate() - first.getUTCDay())
+
+  return Array.from({ length: 42 }, (_, index) => {
+    const date = new Date(start)
+    date.setUTCDate(start.getUTCDate() + index)
+    return date
+  })
+}
+
+function DateRangePicker({ dateRange, onDateRangeChange, onAddRange }) {
+  const initialMonth = parseDateKey(dateRange.start) || parseDateKey(dateRange.end) || new Date()
+  const [visibleMonth, setVisibleMonth] = useState(
+    () => new Date(Date.UTC(initialMonth.getUTCFullYear(), initialMonth.getUTCMonth(), 1))
+  )
+
+  const startDate = parseDateKey(dateRange.start)
+  const endDate = parseDateKey(dateRange.end)
+  const startTime = startDate?.getTime()
+  const endTime = endDate?.getTime()
+  const days = buildCalendarDays(visibleMonth)
+  const monthTitle = `${MONTH_LABELS[visibleMonth.getUTCMonth()]} ${visibleMonth.getUTCFullYear()}`
+
+  function moveMonth(offset) {
+    setVisibleMonth((prev) => new Date(Date.UTC(prev.getUTCFullYear(), prev.getUTCMonth() + offset, 1)))
+  }
+
+  function selectDate(date) {
+    const nextKey = toDateKey(date)
+    const nextTime = date.getTime()
+
+    if (!dateRange.start || (dateRange.start && dateRange.end)) {
+      onDateRangeChange('start', nextKey)
+      onDateRangeChange('end', '')
+      return
+    }
+
+    if (startTime && nextTime < startTime) {
+      onDateRangeChange('start', nextKey)
+      onDateRangeChange('end', '')
+      return
+    }
+
+    onDateRangeChange('end', nextKey)
+  }
+
+  function clearRange() {
+    onDateRangeChange('start', '')
+    onDateRangeChange('end', '')
+  }
+
+  return (
+    <div className="custom-datePicker">
+      <div className="date-calendar">
+        <div className="date-pickerToolbar">
+          <button type="button" className="date-navBtn" onClick={() => moveMonth(-1)} aria-label="Previous month">
+            ‹
+          </button>
+          <strong>{monthTitle}</strong>
+          <button type="button" className="date-navBtn" onClick={() => moveMonth(1)} aria-label="Next month">
+            ›
+          </button>
+        </div>
+
+        <div className="date-weekdays">
+          {WEEKDAY_LABELS.map((day, index) => (
+            <span key={`${day}-${index}`}>{day}</span>
+          ))}
+        </div>
+
+        <div className="date-grid">
+          {days.map((date) => {
+            const key = toDateKey(date)
+            const time = date.getTime()
+            const isCurrentMonth = date.getUTCMonth() === visibleMonth.getUTCMonth()
+            const isStart = key === dateRange.start
+            const isEnd = key === dateRange.end
+            const isInRange = startTime && endTime && time > startTime && time < endTime
+
+            return (
+              <button
+                type="button"
+                className={[
+                  'date-day',
+                  isCurrentMonth ? '' : 'is-muted',
+                  isStart ? 'is-start' : '',
+                  isEnd ? 'is-end' : '',
+                  isInRange ? 'is-range' : '',
+                ].filter(Boolean).join(' ')}
+                key={key}
+                onClick={() => selectDate(date)}
+              >
+                {date.getUTCDate()}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="date-rangeSummary" aria-label="Selected travel date range">
+        <div className="date-summaryItem">
+          <span>Start</span>
+          <strong>{dateRange.start ? formatDateLabel(dateRange.start) : 'Select start'}</strong>
+        </div>
+        <div className="date-summaryItem">
+          <span>End</span>
+          <strong>{dateRange.end ? formatDateLabel(dateRange.end) : 'Select end'}</strong>
+        </div>
+        {(dateRange.start || dateRange.end) && (
+          <button type="button" onClick={clearRange}>Clear</button>
+        )}
+        <button type="button" onClick={onAddRange} disabled={!dateRange.start || !dateRange.end}>
+          Add range
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function SearchableAirportSelect({ name, value, onChange, options, placeholder }) {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
@@ -215,29 +361,14 @@ export function SearchPreferencesForm({
           </div>
 
           <div className="date-panel">
-            <div className="date-picker-row">
-              <label>
-                Date range (start)
-                <input
-                  type="date"
-                  value={dateRange.start}
-                  onChange={(ev) => onDateRangeChange('start', ev.target.value)}
-                />
-              </label>
-
-              <label>
-                Date range (end)
-                <input
-                  type="date"
-                  value={dateRange.end}
-                  onChange={(ev) => onDateRangeChange('end', ev.target.value)}
-                />
-              </label>
-
-              <button type="button" onClick={onAddRange} disabled={!dateRange.start || !dateRange.end}>
-                Add range
-              </button>
+            <div className="date-panelHeader">
+              <span>Choose travel dates</span>
             </div>
+            <DateRangePicker
+              dateRange={dateRange}
+              onDateRangeChange={onDateRangeChange}
+              onAddRange={onAddRange}
+            />
 
             <div className="chips">
               {(Array.isArray(datesList) ? datesList : parseList(datesList)).map((d) => (
