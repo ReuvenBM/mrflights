@@ -121,12 +121,7 @@ export function SearchPreferencesForm({
   onRemoveDate,
   onChange,
   onRun,
-  onStartSchedule,
-  onStopSchedule,
   running,
-  updatingSchedule,
-  scheduleSupported,
-  canStartSchedule,
   isOpen,
   onToggle,
   onCollapse,
@@ -186,72 +181,76 @@ export function SearchPreferencesForm({
           onToggle?.()
         }}
       >
-        <h2>Search Preferences</h2>
+        <div>
+          <span className="panel-kicker">Route setup</span>
+          <h2>Search Preferences</h2>
+        </div>
+        <span className="panel-toggle">{isOpen ? 'Collapse' : 'Edit search'}</span>
       </header>
 
       {isOpen && (
         <form className="form">
-          <label>
-            Origin
-          </label>
-          <div>
-            <SearchableAirportSelect
-              name="origins"
-              value={configForm.origins || ''}
-              onChange={onChange}
-              options={airportOptions}
-              placeholder="Type a city or code (e.g. Tel Aviv / TLV)"
-            />
-          </div>
-
-          <label>
-            Destination
-          </label>
-          <div>
-            <SearchableAirportSelect
-              name="dests"
-              value={configForm.dests || ''}
-              onChange={onChange}
-              options={airportOptions}
-              placeholder="Type a city or code (e.g. Bangkok / BKK)"
-            />
-          </div>
-
-          <div className="date-picker-row">
-            <label>
-              Date range (start)
-              <input
-                type="date"
-                value={dateRange.start}
-                onChange={(ev) => onDateRangeChange('start', ev.target.value)}
+          <div className="search-grid">
+            <label className="field-card">
+              <span>Origin</span>
+              <SearchableAirportSelect
+                name="origins"
+                value={configForm.origins || ''}
+                onChange={onChange}
+                options={airportOptions}
+                placeholder="Type a city or code (e.g. Tel Aviv / TLV)"
               />
             </label>
 
-            <label>
-              Date range (end)
-              <input
-                type="date"
-                value={dateRange.end}
-                onChange={(ev) => onDateRangeChange('end', ev.target.value)}
+            <label className="field-card">
+              <span>Destination</span>
+              <SearchableAirportSelect
+                name="dests"
+                value={configForm.dests || ''}
+                onChange={onChange}
+                options={airportOptions}
+                placeholder="Type a city or code (e.g. Bangkok / BKK)"
               />
             </label>
-
-            <button type="button" onClick={onAddRange} disabled={!dateRange.start || !dateRange.end}>
-              Add range
-            </button>
           </div>
 
-          <div className="chips">
-            {(Array.isArray(datesList) ? datesList : parseList(datesList)).map((d) => (
-              <span className="chip" key={d}>
-                {d}
-                <button type="button" onClick={() => onRemoveDate(d)}>×</button>
-              </span>
-            ))}
+          <div className="date-panel">
+            <div className="date-picker-row">
+              <label>
+                Date range (start)
+                <input
+                  type="date"
+                  value={dateRange.start}
+                  onChange={(ev) => onDateRangeChange('start', ev.target.value)}
+                />
+              </label>
 
-            {(!datesList || (Array.isArray(datesList) && datesList.length === 0)) && (
-              <span className="hint">Add at least one date</span>
-            )}
+              <label>
+                Date range (end)
+                <input
+                  type="date"
+                  value={dateRange.end}
+                  onChange={(ev) => onDateRangeChange('end', ev.target.value)}
+                />
+              </label>
+
+              <button type="button" onClick={onAddRange} disabled={!dateRange.start || !dateRange.end}>
+                Add range
+              </button>
+            </div>
+
+            <div className="chips">
+              {(Array.isArray(datesList) ? datesList : parseList(datesList)).map((d) => (
+                <span className="chip" key={d}>
+                  {d}
+                  <button type="button" onClick={() => onRemoveDate(d)}>×</button>
+                </span>
+              ))}
+
+              {(!datesList || (Array.isArray(datesList) && datesList.length === 0)) && (
+                <span className="hint">Add at least one date</span>
+              )}
+            </div>
           </div>
 
           {/* <div className="triple">
@@ -271,9 +270,10 @@ export function SearchPreferencesForm({
             </label>
           </div> */}
 
-          <div className="actions">
+          <div className="actions search-actions">
             <button
               type="button"
+              className="primary-action"
               onClick={() => {
                 onRun?.()
                 onCollapse?.()

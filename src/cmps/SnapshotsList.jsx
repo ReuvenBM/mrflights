@@ -175,14 +175,24 @@ export function SnapshotsList({
 
   if (!snapshots || !Object.keys(snapshots).length) {
     return (
-      <section className="panel">
+      <section className="panel snapshots-empty">
+        <span className="panel-kicker">Results</span>
         <h3>No results yet</h3>
+        <p>Run a search to create route snapshots and compare prices by travel date.</p>
       </section>
     )
   }
 
   return (
-    <>
+    <section className="snapshots-board">
+      <div className="snapshots-boardHeader">
+        <div>
+          <span className="panel-kicker">Results</span>
+          <h2>Tracked routes</h2>
+        </div>
+        <span>{Object.keys(groupedSnapshots).length} route{Object.keys(groupedSnapshots).length === 1 ? '' : 's'}</span>
+      </div>
+
       {Object.entries(groupedSnapshots).map(([routeKey, routeSnapshots]) => {
         const dates = routeSnapshots.map((s) => s.date)
         const dateItems = buildDateItems(dates)
@@ -191,9 +201,13 @@ export function SnapshotsList({
         const isOpen = openRouteKey === routeKey
         const routeWatchItemIds = routeSnapshots.map((s) => s.watchItemId).filter(Boolean)
         const isDeletingRoute = deletingRouteKey === routeKey
+        const routeMinPrice = routeSnapshots.reduce((min, snapshot) => {
+          if (snapshot.minPrice == null) return min
+          return min == null || snapshot.minPrice < min ? snapshot.minPrice : min
+        }, null)
 
         return (
-          <section className="panel" key={routeKey}>
+          <section className="panel route-panel" key={routeKey}>
             <div
               className="snapshots-routeHeader"
               role="button"
@@ -206,6 +220,7 @@ export function SnapshotsList({
               }}
             >
               <div className="snapshots-routeInfo">
+                <span className="route-chip">{isOpen ? 'Expanded route' : 'Route'}</span>
                 <h3>
                   {formatAirportLabel(routeSnapshots[0]?.route?.origin)} →{' '}
                   {formatAirportLabel(routeSnapshots[0]?.route?.dest)}
@@ -235,22 +250,30 @@ export function SnapshotsList({
                   </div>
                 )}
               </div>
-              <button
-                type="button"
-                disabled={isDeletingRoute || !routeWatchItemIds.length}
-                onClick={async (ev) => {
-                  ev.stopPropagation()
-                  if (isDeletingRoute) return
-                  setDeletingRouteKey(routeKey)
-                  try {
-                    await onDeleteRoute(routeWatchItemIds)
-                  } finally {
-                    setDeletingRouteKey(null)
-                  }
-                }}
-              >
-                {isDeletingRoute ? 'Deleting…' : 'Delete route'}
-              </button>
+              <div className="route-actions">
+                <div className="route-metrics">
+                  <span>{routeMinPrice != null ? routeMinPrice : 'N/A'}</span>
+                  <small>Best price</small>
+                </div>
+                <span className="route-toggle">{isOpen ? 'Hide' : 'View'}</span>
+                <button
+                  type="button"
+                  className="ghost-danger"
+                  disabled={isDeletingRoute || !routeWatchItemIds.length}
+                  onClick={async (ev) => {
+                    ev.stopPropagation()
+                    if (isDeletingRoute) return
+                    setDeletingRouteKey(routeKey)
+                    try {
+                      await onDeleteRoute(routeWatchItemIds)
+                    } finally {
+                      setDeletingRouteKey(null)
+                    }
+                  }}
+                >
+                  {isDeletingRoute ? 'Deleting…' : 'Delete route'}
+                </button>
+              </div>
             </div>
 
             {isOpen && (
@@ -268,10 +291,13 @@ export function SnapshotsList({
                   return (
                     <div className="snapshot-card" key={snapshot.watchItemId}>
                       <div className="snapshot-cardHeader">
-                        <h4 className="snapshot-date">{snapshot.date}</h4>
+                        <div>
+                          <span className="panel-kicker">Travel date</span>
+                          <h4 className="snapshot-date">{snapshot.date}</h4>
+                        </div>
                         <div className="snapshot-meta">
                           <span className="snapshot-minPrice">
-                            Min price:{' '}
+                            <small>Min price</small>
                             {snapshot.minPrice != null
                               ? `${snapshot.minPrice} ${cheapestOption?.currency ?? ''}`.trim()
                               : 'N/A'}
@@ -326,12 +352,15 @@ export function SnapshotsList({
                                   {option.price} {option.currency}
                                 </span>
                                 <span className="opt-stops">
-                                  stops: {option.stops}
+                                  <small>Stops</small>
+                                  {option.stops}
                                 </span>
                                 <span className="opt-carriers">
-                                  carriers: {formatOptionCarriers(option)}
+                                  <small>Carriers</small>
+                                  {formatOptionCarriers(option)}
                                 </span>
                                 <span className="opt-times">
+                                  <small>Times</small>
                                   {option.dep} → {option.arr}
                                 </span>
                                 {googleFlightsUrl && (
@@ -340,7 +369,7 @@ export function SnapshotsList({
                                     target="_blank"
                                     rel="noreferrer"
                                   >
-                                    Link
+                                    Open flights
                                   </a>
                                 )}
                               </li>
@@ -358,6 +387,6 @@ export function SnapshotsList({
           </section>
         )
       })}
-    </>
+    </section>
   )
 }

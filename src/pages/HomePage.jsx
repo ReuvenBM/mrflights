@@ -5,8 +5,6 @@ import { useUser } from '../store/UserContext'
 import { Link } from 'react-router-dom'
 import { SearchPreferencesForm } from '../cmps/SearchPreferencesForm'
 import { parseList, generateDatesBetween } from '../services/deals.utils'
-import { io } from 'socket.io-client'
-import { Algorithm } from '../cmps/Algorithm'
 import { SnapshotsList } from '../cmps/SnapshotsList'
 
 const SNAPSHOT_POLL_MAX_ATTEMPTS = 8
@@ -25,17 +23,20 @@ export function HomePage() {
     //intervalMinutes: ''
   })
   const [dateRange, setDateRange] = useState({ start: '', end: '' })
-  const [status, setStatus] = useState(null)
+  const [, setStatus] = useState(null)
   const [snapshots, setSnapshots] = useState(null)
-  const [snapshotUpdatedAt, setSnapshotUpdatedAt] = useState(null)
+  const [, setSnapshotUpdatedAt] = useState(null)
   const snapshotUpdatedAtRef = useRef(null)
-  const [loadingStatus, setLoadingStatus] = useState(false)
+  const [, setLoadingStatus] = useState(false)
   const [running, setRunning] = useState(false)
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(true)
   const didSetInitialPreferences = useRef(false)
 
   const configPayload = useMemo(() => normalizeConfig(configForm), [configForm])
   const datesList = useMemo(() => (Array.isArray(configForm.dates) ? configForm.dates : parseList(configForm.dates)), [configForm.dates])
+  const routeCount = snapshots
+    ? new Set(Object.values(snapshots).map((snapshot) => `${snapshot.route?.origin}-${snapshot.route?.dest}`)).size
+    : 0
   useEffect(() => {
     if (!user) return
     refreshStatus()
@@ -279,9 +280,11 @@ export function HomePage() {
 
   if (userLoading) {
     return (
-      <main className="page">
-        <section className="panel">
-          <h3>Loading…</h3>
+      <main className="page home-dashboard">
+        <section className="panel state-panel">
+          <span className="state-eyebrow">mrFlights</span>
+          <h2>Loading your dashboard…</h2>
+          <p>Checking your session and latest flight snapshots.</p>
         </section>
       </main>
     )
@@ -289,17 +292,33 @@ export function HomePage() {
 
   if (!user) {
     return (
-      <main className="page">
-        <section className="panel">
-          <h2>Welcome</h2>
-          <p>Please <Link to="/auth">log in</Link> to set preferences and view flight deals.</p>
+      <main className="page home-dashboard">
+        <section className="panel state-panel state-panel-hero">
+          <span className="state-eyebrow">Flight deals monitor</span>
+          <h1>Track the routes that matter.</h1>
+          <p>Log in to set airport preferences, run a fresh search, and review saved price snapshots in one place.</p>
+          <Link className="state-link" to="/auth">Log in to continue</Link>
         </section>
       </main>
     )
   }
 
   return (
-    <main className="page">
+    <main className="page home-dashboard">
+      <section className="dashboard-hero">
+        <div>
+          <span className="state-eyebrow">Flight dashboard</span>
+          <h1>Find the next route worth booking</h1>
+          <p>Choose your route and travel window, then track the best flight opportunities as prices change</p>
+        </div>
+        <div className="dashboard-stats" aria-label="Current snapshot summary">
+          <div className="dashboard-stat">
+            <span>{routeCount}</span>
+            <small>Routes</small>
+          </div>
+        </div>
+      </section>
+
       <SearchPreferencesForm
         configForm={configForm}
         datesList={datesList}
