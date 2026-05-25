@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { AIRPORT_OPTIONS, buildAirportMap } from '../services/airport.service'
 import { buildGoogleFlightsLink } from '../services/deals.utils'
+import { airlineNames } from '../services/airline-names'
 
 const airportByCode = buildAirportMap(AIRPORT_OPTIONS)
 
@@ -14,6 +15,118 @@ const formatAirportLabel = (code) => {
 }
 
 const formatDateRangeItem = (start, end) => (start === end ? start : `${start} – ${end}`)
+
+const formatCarriers = (carriers, fallback = '—') => {
+  if (!carriers) return fallback
+  const list = Array.isArray(carriers)
+    ? carriers
+    : String(carriers)
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean)
+
+  if (!list.length) return fallback
+
+  const uniqueItems = []
+  const seen = new Set()
+
+  list.forEach((item) => {
+    const raw = String(item || '').trim()
+    if (!raw) return
+    const key = raw.toUpperCase()
+    if (seen.has(key)) return
+    seen.add(key)
+    uniqueItems.push(raw)
+  })
+
+  if (!uniqueItems.length) return fallback
+
+  return uniqueItems
+    .map((item) => airlineNames[item] || airlineNames[item.toUpperCase()] || item)
+    .join(', ')
+}
+
+const firstValue = (values) => values.find((value) => {
+  if (Array.isArray(value)) return value.length
+  return String(value || '').trim()
+})
+
+const collectNestedCarrierCodes = (option) => {
+  const codes = []
+  const legs = Array.isArray(option?.legs) ? option.legs : []
+  const itineraries = Array.isArray(option?.itineraries) ? option.itineraries : []
+
+  legs.forEach((leg) => {
+    const legCarrier = firstValue([
+      leg?.carrier,
+      leg?.carrierCode,
+      leg?.airline,
+      leg?.airlineCode,
+    ])
+    if (legCarrier) codes.push(legCarrier)
+
+    const segments = Array.isArray(leg?.segments) ? leg.segments : []
+    segments.forEach((segment) => {
+      const segmentCarrier = firstValue([
+        segment?.carrier,
+        segment?.carrierCode,
+        segment?.airline,
+        segment?.airlineCode,
+      ])
+      if (segmentCarrier) codes.push(segmentCarrier)
+    })
+  })
+
+  itineraries.forEach((itinerary) => {
+    const segments = Array.isArray(itinerary?.segments) ? itinerary.segments : []
+    segments.forEach((segment) => {
+      const segmentCarrier = firstValue([
+        segment?.carrier,
+        segment?.carrierCode,
+        segment?.carrier_code,
+        segment?.airline,
+        segment?.airlineCode,
+        segment?.airline_code,
+        segment?.marketing_carrier?.iata_code,
+        segment?.operating_carrier?.iata_code,
+      ])
+      if (segmentCarrier) codes.push(segmentCarrier)
+    })
+  })
+
+  return codes
+}
+
+const formatOptionCarriers = (option) => {
+  const carrierDisplay = firstValue([
+    option?.carrierName,
+    option?.airlineName,
+    option?.carrierDisplayName,
+    option?.airlineDisplayName,
+  ])
+  if (carrierDisplay) return formatCarriers(carrierDisplay)
+
+  const carrierCode = firstValue([
+    option?.carriers,
+    option?.carrier,
+    option?.carrierCode,
+    option?.airline,
+    option?.airlineCode,
+  ])
+  if (carrierCode) return formatCarriers(carrierCode)
+
+  const nestedCarrierCodes = collectNestedCarrierCodes(option)
+  if (nestedCarrierCodes.length) return formatCarriers(nestedCarrierCodes)
+
+  return formatCarriers(firstValue([
+    option?.supplierName,
+    option?.bookName,
+    option?.supplierDisplayName,
+    option?.bookDisplayName,
+    option?.sourceName,
+    option?.source,
+  ]))
+}
 
 const buildDateItems = (dates) => {
   const sorted = [...new Set(dates.filter(Boolean))].sort()
@@ -97,28 +210,30 @@ export function SnapshotsList({
                   {formatAirportLabel(routeSnapshots[0]?.route?.origin)} →{' '}
                   {formatAirportLabel(routeSnapshots[0]?.route?.dest)}
                 </h3>
-                <div className="snapshots-routeDates">
-                  {dateItems.length ? (
-                    <>
-                      {visibleItems.map((item, index) => (
-                        <p className="snapshots-dateLine" key={`${routeKey}-date-${item}`}>
-                          <span className={`snapshots-dateLabel${index === 0 ? '' : ' is-empty'}`}>
-                            Dates:
-                          </span>
-                          <span className="snapshots-dateValue">{item}</span>
-                        </p>
-                      ))}
-                      {hasMoreItems && (
-                        <p className="snapshots-dateLine" key={`${routeKey}-more`}>
-                          <span className="snapshots-dateLabel is-empty">Dates:</span>
-                          <span className="snapshots-dateValue">more</span>
-                        </p>
-                      )}
-                    </>
-                  ) : (
-                    <p className="snapshots-dateLine">Dates: N/A</p>
-                  )}
-                </div>
+                {!isOpen && (
+                  <div className="snapshots-routeDates">
+                    {dateItems.length ? (
+                      <>
+                        {visibleItems.map((item, index) => (
+                          <p className="snapshots-dateLine" key={`${routeKey}-date-${item}`}>
+                            <span className={`snapshots-dateLabel${index === 0 ? '' : ' is-empty'}`}>
+                              Dates:
+                            </span>
+                            <span className="snapshots-dateValue">{item}</span>
+                          </p>
+                        ))}
+                        {hasMoreItems && (
+                          <p className="snapshots-dateLine" key={`${routeKey}-more`}>
+                            <span className="snapshots-dateLabel is-empty">Dates:</span>
+                            <span className="snapshots-dateValue">more</span>
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="snapshots-dateLine">Dates: N/A</p>
+                    )}
+                  </div>
+                )}
               </div>
               <button
                 type="button"
@@ -214,7 +329,7 @@ export function SnapshotsList({
                                   stops: {option.stops}
                                 </span>
                                 <span className="opt-carriers">
-                                  carriers: {option.carriers}
+                                  carriers: {formatOptionCarriers(option)}
                                 </span>
                                 <span className="opt-times">
                                   {option.dep} → {option.arr}
@@ -225,7 +340,7 @@ export function SnapshotsList({
                                     target="_blank"
                                     rel="noreferrer"
                                   >
-                                    Google Flights
+                                    Link
                                   </a>
                                 )}
                               </li>

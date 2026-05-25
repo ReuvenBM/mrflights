@@ -300,8 +300,6 @@ export function HomePage() {
 
   return (
     <main className="page">
-      <h2>Production data server is down!</h2>
-      <h3>This is sample data only:</h3>
       <SearchPreferencesForm
         configForm={configForm}
         datesList={datesList}
