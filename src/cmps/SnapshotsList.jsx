@@ -33,6 +33,34 @@ const formatSnapshotDate = (dateStr) => {
   })
 }
 
+const formatLastChecked = (value) => {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+
+  const now = Date.now()
+  const diffMinutes = Math.floor((now - date.getTime()) / 60000)
+  if (diffMinutes >= 0 && diffMinutes < 60) {
+    if (diffMinutes < 1) return 'Last checked: now'
+    return `Last checked: ${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`
+  }
+
+  const isToday = date.toDateString() === new Date(now).toDateString()
+  const time = date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+
+  if (isToday) return `Last checked: today ${time}`
+
+  const day = date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  })
+
+  return `Last checked: ${day} ${time}`
+}
+
 const RECOMMENDATION_LABELS = {
   BUY: 'Buy now',
   GOOD_DEAL: 'Good deal',
@@ -197,16 +225,30 @@ export function SnapshotsList({
     return acc
   }, {})
 
-  const recommendationsByWatchItemId = (Array.isArray(watchItems) ? watchItems : []).reduce((acc, item) => {
-    if (item?._id && item?.recommendation) acc[String(item._id)] = item.recommendation
+  const watchItemsById = (Array.isArray(watchItems) ? watchItems : []).reduce((acc, item) => {
+    if (item?._id) acc[String(item._id)] = item
     return acc
   }, {})
 
   const getSnapshotRecommendation = (snapshot) => (
     snapshot?.watchItemId
-      ? recommendationsByWatchItemId[String(snapshot.watchItemId)]
+      ? watchItemsById[String(snapshot.watchItemId)]?.recommendation
       : null
   )
+
+  const getLastChecked = (snapshot) => {
+    const watchItem = snapshot?.watchItemId
+      ? watchItemsById[String(snapshot.watchItemId)]
+      : null
+
+    return formatLastChecked(
+      watchItem?.recommendation?.computedAt ||
+      watchItem?.lastRunAt ||
+      watchItem?.updatedAt ||
+      snapshot?.updatedAt ||
+      snapshot?.snapshotUpdatedAt
+    )
+  }
 
   const getRouteRecommendation = (routeSnapshots) => {
     const actions = routeSnapshots
@@ -334,6 +376,7 @@ export function SnapshotsList({
                   const recommendation = getSnapshotRecommendation(snapshot)
                   const recommendationAction = recommendation?.action
                   const recommendationLabel = formatRecommendationAction(recommendationAction)
+                  const lastChecked = getLastChecked(snapshot)
                   const cheapestOption =
                     options.length
                       ? options.reduce(
@@ -348,6 +391,7 @@ export function SnapshotsList({
                         <div>
                           <span className="panel-kicker">Travel date</span>
                           <h4 className="snapshot-date">{formatSnapshotDate(snapshot.date)}</h4>
+                          {lastChecked && <small className="snapshot-lastChecked">{lastChecked}</small>}
                         </div>
                         <div className="snapshot-meta">
                           {recommendationLabel && (

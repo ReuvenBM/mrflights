@@ -1316,6 +1316,16 @@ button:disabled {
   font-weight: 900;
 }
 
+.snapshot-lastChecked {
+  display: block;
+  margin-top: 2px;
+  color: #657386;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 .snapshot-recommendation.recommendation-buy,
 .snapshot-recommendation.recommendation-good-deal {
   background: #eaf8f0;
