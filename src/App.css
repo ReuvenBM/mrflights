@@ -867,7 +867,7 @@ button:disabled {
 
 .dashboard-stats {
   display: grid;
-  grid-template-columns: minmax(92px, 1fr);
+  grid-template-columns: repeat(5, minmax(92px, 1fr));
   gap: 10px;
 }
 
@@ -879,12 +879,45 @@ button:disabled {
   background: rgba(255, 255, 255, 0.78);
 }
 
+.dashboard-stat.recommendation-buy,
+.dashboard-stat.recommendation-good-deal {
+  background: #f0faf4;
+  border-color: #cfeedd;
+}
+
+.dashboard-stat.recommendation-wait {
+  background: #fff9ed;
+  border-color: #f5e2bc;
+}
+
+.dashboard-stat.recommendation-watch {
+  background: #f3f7ff;
+  border-color: #dbe6ff;
+}
+
 .dashboard-stat span {
   display: block;
   color: #07111f;
   font-size: 26px;
   font-weight: 900;
   line-height: 1;
+}
+
+.dashboard-stat.recommendation-buy span,
+.dashboard-stat.recommendation-good-deal span,
+.dashboard-stat.recommendation-buy small,
+.dashboard-stat.recommendation-good-deal small {
+  color: #227a52;
+}
+
+.dashboard-stat.recommendation-wait span,
+.dashboard-stat.recommendation-wait small {
+  color: #8a6416;
+}
+
+.dashboard-stat.recommendation-watch span,
+.dashboard-stat.recommendation-watch small {
+  color: #315fb8;
 }
 
 .dashboard-stat small {

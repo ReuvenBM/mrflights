@@ -10,6 +10,17 @@ import { SnapshotsList } from '../cmps/SnapshotsList'
 
 const SNAPSHOT_POLL_MAX_ATTEMPTS = 8
 const SNAPSHOT_POLL_INTERVAL_MS = 1500
+const RECOMMENDATION_SUMMARY_ITEMS = [
+  { action: 'BUY', label: 'Buy now' },
+  { action: 'GOOD_DEAL', label: 'Good deal' },
+  { action: 'WATCH', label: 'Worth watching' },
+  { action: 'WAIT', label: 'Wait' },
+]
+
+const getRecommendationClass = (action) => {
+  const key = String(action || '').trim().toLowerCase().replaceAll('_', '-')
+  return key ? ` recommendation-${key}` : ''
+}
 
 export function HomePage() {
   const { user, userLoading } = useUser()
@@ -36,9 +47,22 @@ export function HomePage() {
 
   const configPayload = useMemo(() => normalizeConfig(configForm), [configForm])
   const datesList = useMemo(() => (Array.isArray(configForm.dates) ? configForm.dates : parseList(configForm.dates)), [configForm.dates])
+  const watchItemsById = (Array.isArray(watchItems) ? watchItems : []).reduce((acc, item) => {
+    if (item?._id) acc[String(item._id)] = item
+    return acc
+  }, {})
   const routeCount = snapshots
     ? new Set(Object.values(snapshots).map((snapshot) => `${snapshot.route?.origin}-${snapshot.route?.dest}`)).size
     : 0
+  const recommendationCounts = Object.values(snapshots || {}).reduce((acc, snapshot) => {
+    const recommendation = snapshot?.watchItemId
+      ? watchItemsById[String(snapshot.watchItemId)]?.recommendation
+      : null
+    const action = String(recommendation?.action || '').trim().toUpperCase()
+    if (Object.prototype.hasOwnProperty.call(acc, action)) acc[action] += 1
+    return acc
+  }, RECOMMENDATION_SUMMARY_ITEMS.reduce((acc, item) => ({ ...acc, [item.action]: 0 }), {}))
+
   useEffect(() => {
     if (!user) return
     refreshStatus()
@@ -331,6 +355,12 @@ export function HomePage() {
             <span>{routeCount}</span>
             <small>Routes</small>
           </div>
+          {RECOMMENDATION_SUMMARY_ITEMS.map((item) => (
+            <div className={`dashboard-stat${getRecommendationClass(item.action)}`} key={item.action}>
+              <span>{recommendationCounts[item.action]}</span>
+              <small>{item.label}</small>
+            </div>
+          ))}
         </div>
       </section>
 
