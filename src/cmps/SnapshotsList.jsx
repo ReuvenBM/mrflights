@@ -285,6 +285,7 @@ export function SnapshotsList({
       </div>
 
       {Object.entries(groupedSnapshots).map(([routeKey, routeSnapshots]) => {
+        const orderedRouteSnapshots = [...routeSnapshots].sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')))
         const dates = routeSnapshots.map((s) => s.date)
         const dateItems = buildRouteDateItems(dates)
         const visibleItems = dateItems.slice(0, 2)
@@ -371,7 +372,7 @@ export function SnapshotsList({
 
             {isOpen && (
               <div className="snapshots-dates">
-                {routeSnapshots.map((snapshot) => {
+                {orderedRouteSnapshots.map((snapshot) => {
                   const options = Array.isArray(snapshot.options) ? snapshot.options : []
                   const recommendation = getSnapshotRecommendation(snapshot)
                   const recommendationAction = recommendation?.action
