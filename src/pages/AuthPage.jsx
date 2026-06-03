@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { userService } from '../services/user.service'
 import { useUser } from '../store/UserContext'
@@ -7,85 +7,85 @@ import { showErrorMsg, showSuccessMsg } from '../services/event-bus.service'
 export function AuthPage() {
   const { setUser } = useUser()
   const navigate = useNavigate()
-  const [mode, setMode] = useState('login')
+  const googleButtonRef = useRef(null)
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
   const [loading, setLoading] = useState(false)
-  const [form, setForm] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    username: '',
-    password: '',
-    imgUrl: ''
-  })
+  const [googleLoading, setGoogleLoading] = useState(Boolean(googleClientId))
+  const [googleError, setGoogleError] = useState('')
 
-  function handleChange(ev) {
-    const { name, value } = ev.target
-    setForm((prev) => ({ ...prev, [name]: value }))
-  }
-
-  async function onSubmit(ev) {
-    ev.preventDefault()
+  const onGoogleCredential = useCallback(async (credential) => {
+    if (!credential) {
+      showErrorMsg('Google login failed')
+      return
+    }
     setLoading(true)
     try {
-      if (mode === 'login') {
-        const payload = form.email
-          ? { email: form.email, password: form.password }
-          : { username: form.username, password: form.password }
-        const user = await userService.login(payload)
-        setUser(user)
-        showSuccessMsg('Logged in')
-      } else {
-        const user = await userService.signup(form)
-        setUser(user)
-        showSuccessMsg('Signed up')
-      }
+      const user = await userService.googleLogin(credential)
+      setUser(user)
+      showSuccessMsg('Logged in')
       navigate('/')
     } catch (err) {
       console.error(err)
-      showErrorMsg(err.message || 'Auth failed')
+      showErrorMsg(err.message || 'Google login failed')
     } finally {
       setLoading(false)
     }
-  }
+  }, [navigate, setUser])
+
+  useEffect(() => {
+    if (!googleClientId) return
+
+    function renderGoogleButton() {
+      if (!window.google?.accounts?.id || !googleButtonRef.current) return
+      googleButtonRef.current.innerHTML = ''
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: (res) => onGoogleCredential(res?.credential)
+      })
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        theme: 'outline',
+        size: 'large',
+        width: googleButtonRef.current.offsetWidth || 320
+      })
+      setGoogleLoading(false)
+      setGoogleError('')
+    }
+
+    const scriptId = 'google-identity-services'
+    const existingScript = document.getElementById(scriptId)
+    if (existingScript) {
+      existingScript.addEventListener('load', renderGoogleButton)
+      renderGoogleButton()
+      return () => existingScript.removeEventListener('load', renderGoogleButton)
+    }
+
+    const script = document.createElement('script')
+    script.id = scriptId
+    script.src = 'https://accounts.google.com/gsi/client'
+    script.async = true
+    script.defer = true
+    script.addEventListener('load', renderGoogleButton)
+    script.addEventListener('error', () => {
+      setGoogleLoading(false)
+      setGoogleError('Google login failed to load')
+    })
+    document.head.appendChild(script)
+
+    return () => script.removeEventListener('load', renderGoogleButton)
+  }, [googleClientId, onGoogleCredential])
 
   return (
     <main className="page narrow">
       <section className="panel">
         <header className="panel-header">
-          <h2>{mode === 'login' ? 'Login' : 'Signup'}</h2>
+          <h2>Login</h2>
           <Link to="/">Back home</Link>
         </header>
-        <div className="segmented">
-          <button type="button" className={mode === 'login' ? 'active' : ''} onClick={() => setMode('login')}>
-            Login
-          </button>
-          <button type="button" className={mode === 'signup' ? 'active' : ''} onClick={() => setMode('signup')}>
-            Signup
-          </button>
-        </div>
-        <form className="form" onSubmit={onSubmit}>
-          {mode === 'signup' && (
-            <div className="double">
-              <label>
-                First name *
-                <input name="firstName" value={form.firstName} onChange={handleChange} required />
-              </label>
-              <label>
-                Last name *
-                <input name="lastName" value={form.lastName} onChange={handleChange} required />
-              </label>
-            </div>
-          )}
-          <label>
-            Email {mode === 'login' ? '(or username)' : '*'}
-            <input name="email" value={form.email} onChange={handleChange} type="email" required={mode === 'signup'} />
-          </label>
-          <label>
-            Password *
-            <input name="password" value={form.password} onChange={handleChange} type="password" required />
-          </label>
-          <button type="submit" disabled={loading}>{loading ? 'Please wait…' : (mode === 'login' ? 'Login' : 'Signup')}</button>
-        </form>
+        {!googleClientId && <p>Google login is not configured.</p>}
+        {googleError && <p>{googleError}</p>}
+        {googleLoading && <p>Loading Google login...</p>}
+        {googleClientId && <div ref={googleButtonRef} style={{ margin: '1rem 0', minHeight: 44 }} />}
+        {loading && <p>Please wait...</p>}
       </section>
     </main>
   )

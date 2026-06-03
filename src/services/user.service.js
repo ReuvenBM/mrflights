@@ -10,6 +10,7 @@ export const userService = {
   remove,
   updateProfile,
   login,
+  googleLogin,
   signup,
   logout,
   getLoggedinUser,
@@ -48,6 +49,11 @@ async function updateProfile(user) {
 
 async function login(credentials) {
   const user = await httpService.post('auth/login', credentials)
+  return saveLocalUser(user)
+}
+
+async function googleLogin(credential) {
+  const user = await httpService.post('auth/google', { credential })
   return saveLocalUser(user)
 }
 
