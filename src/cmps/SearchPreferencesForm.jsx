@@ -401,6 +401,13 @@ export function SearchPreferencesForm({
             </label>
           </div> */}
 
+          <div className="triple">
+            <label>
+              Target price
+              <input name="targetPrice" type="number" min="0" value={configForm.targetPrice} onChange={onChange} />
+            </label>
+          </div>
+
           <div className="actions search-actions">
             <button
               type="button"

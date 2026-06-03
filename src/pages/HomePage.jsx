@@ -35,7 +35,8 @@ export function HomePage() {
     currency: '',
     maxNonstop: '',
     maxOnestop: '',
-    maxHours: ''
+    maxHours: '',
+    targetPrice: ''
     //intervalMinutes: ''
   })
   const [dateRange, setDateRange] = useState({ start: '', end: '' })
@@ -100,6 +101,12 @@ export function HomePage() {
       refreshSnapshot()
     })
 
+    socket.on('target-price:alert', (payload) => {
+      const route = payload?.route ? `${payload.route.origin}-${payload.route.dest}` : 'Flight'
+      const currency = payload?.currency ? ` ${payload.currency}` : ''
+      showSuccessMsg(`${route} reached ${payload?.minPrice}${currency} target price`)
+    })
+
     return () => socket.disconnect()
   }, [user?._id])
 
@@ -126,7 +133,8 @@ export function HomePage() {
       name === 'currency' ||
       name === 'maxNonstop' ||
       name === 'maxOnestop' ||
-      name === 'maxHours'
+      name === 'maxHours' ||
+      name === 'targetPrice'
     ) {
       clearSnapshotState()
     }
@@ -288,6 +296,7 @@ export function HomePage() {
 
   function normalizeConfig(form) {
     const toNum = (v) => {
+      if (v === '') return undefined
       const n = Number(v)
       return Number.isFinite(n) ? n : undefined
     }
@@ -300,6 +309,7 @@ export function HomePage() {
       maxNonstop: toNum(form.maxNonstop),
       maxOnestop: toNum(form.maxOnestop),
       maxHours: toNum(form.maxHours),
+      targetPrice: toNum(form.targetPrice),
       //intervalMinutes: toNum(form.intervalMinutes)
     }
   }
@@ -312,6 +322,7 @@ export function HomePage() {
     return {
       route: { origin, dest },
       dates,
+      targetPrice: config.targetPrice,
       filters: {
         currency: config.currency,
         maxNonstop: config.maxNonstop,
