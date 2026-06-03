@@ -879,15 +879,19 @@ button:disabled {
   background: rgba(255, 255, 255, 0.78);
 }
 
-.dashboard-stat.recommendation-buy,
-.dashboard-stat.recommendation-good-deal {
+.dashboard-stat.recommendation-buy {
   background: #f0faf4;
   border-color: #cfeedd;
 }
 
-.dashboard-stat.recommendation-wait {
+.dashboard-stat.recommendation-good-deal {
   background: #fff9ed;
   border-color: #f5e2bc;
+}
+
+.dashboard-stat.recommendation-wait {
+  background: #f6f8fb;
+  border-color: #e3e9f0;
 }
 
 .dashboard-stat.recommendation-watch {
@@ -904,15 +908,18 @@ button:disabled {
 }
 
 .dashboard-stat.recommendation-buy span,
-.dashboard-stat.recommendation-good-deal span,
-.dashboard-stat.recommendation-buy small,
-.dashboard-stat.recommendation-good-deal small {
+.dashboard-stat.recommendation-buy small {
   color: #227a52;
+}
+
+.dashboard-stat.recommendation-good-deal span,
+.dashboard-stat.recommendation-good-deal small {
+  color: #8a6416;
 }
 
 .dashboard-stat.recommendation-wait span,
 .dashboard-stat.recommendation-wait small {
-  color: #8a6416;
+  color: #657386;
 }
 
 .dashboard-stat.recommendation-watch span,
@@ -1241,17 +1248,22 @@ button:disabled {
   font-weight: 800;
 }
 
-.route-recommendation.recommendation-buy,
-.route-recommendation.recommendation-good-deal {
+.route-recommendation.recommendation-buy {
   background: #f0faf4;
   border-color: #cfeedd;
   color: #227a52;
 }
 
-.route-recommendation.recommendation-wait {
+.route-recommendation.recommendation-good-deal {
   background: #fff9ed;
   border-color: #f5e2bc;
   color: #8a6416;
+}
+
+.route-recommendation.recommendation-wait {
+  background: #f6f8fb;
+  border-color: #e3e9f0;
+  color: #657386;
 }
 
 .route-recommendation.recommendation-watch {
@@ -1359,15 +1371,19 @@ button:disabled {
   text-transform: none;
 }
 
-.snapshot-recommendation.recommendation-buy,
-.snapshot-recommendation.recommendation-good-deal {
+.snapshot-recommendation.recommendation-buy {
   background: #eaf8f0;
   color: #18794e;
 }
 
-.snapshot-recommendation.recommendation-wait {
+.snapshot-recommendation.recommendation-good-deal {
   background: #fff7e8;
   color: #986a12;
+}
+
+.snapshot-recommendation.recommendation-wait {
+  background: #f3f7fb;
+  color: #657386;
 }
 
 .snapshot-recommendation.recommendation-watch {

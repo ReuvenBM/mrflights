@@ -401,9 +401,9 @@ export function SearchPreferencesForm({
             </label>
           </div> */}
 
-          <div className="triple">
-            <label>
-              Target price
+          <div className="search-grid">
+            <label className="field-card">
+              <span>Notify me when price drops below:</span>
               <input name="targetPrice" type="number" min="0" value={configForm.targetPrice} onChange={onChange} />
             </label>
           </div>
