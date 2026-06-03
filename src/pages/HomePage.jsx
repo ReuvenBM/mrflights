@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from 'react'
+import { io } from 'socket.io-client'
 import { dealsService } from '../services/deals.service'
 import { watchItemService } from '../services/watchItem.service'
 import { showErrorMsg, showSuccessMsg } from '../services/event-bus.service'
@@ -10,6 +11,9 @@ import { SnapshotsList } from '../cmps/SnapshotsList'
 
 const SNAPSHOT_POLL_MAX_ATTEMPTS = 8
 const SNAPSHOT_POLL_INTERVAL_MS = 1500
+const SOCKET_URL = import.meta.env.VITE_API_URL
+  ? import.meta.env.VITE_API_URL.replace(/\/+$/, '')
+  : undefined
 const RECOMMENDATION_SUMMARY_ITEMS = [
   { action: 'BUY', label: 'Buy now' },
   { action: 'GOOD_DEAL', label: 'Good deal' },
@@ -70,34 +74,34 @@ export function HomePage() {
     refreshWatchItems()
   }, [user])
 
-  // useEffect(() => {
-  //   if (!user) return
+  useEffect(() => {
+    if (!user?._id) return
 
-  //   const socket = io({
-  //     withCredentials: true,
-  //   })
+    const socket = io(SOCKET_URL, {
+      withCredentials: true,
+    })
 
-  //   socket.on('connect', () => {
-  //     if (user?._id) socket.emit('register-user', user._id)
-  //   })
+    socket.on('connect', () => {
+      socket.emit('register-user', user._id)
+    })
 
-  //   socket.on('deals:update', (payload) => {
-  //     if (!payload?.refresh) return
-  //     const incomingUpdatedAt =
-  //       payload.updatedAt instanceof Date
-  //         ? payload.updatedAt.getTime()
-  //         : typeof payload.updatedAt === 'string'
-  //           ? Date.parse(payload.updatedAt)
-  //           : payload.updatedAt
-  //     const currentUpdatedAt = snapshotUpdatedAtRef.current
-  //     if (Number.isFinite(incomingUpdatedAt) && Number.isFinite(currentUpdatedAt)) {
-  //       if (incomingUpdatedAt <= currentUpdatedAt) return
-  //     }
-  //     refreshSnapshot()
-  //   })
+    socket.on('deals:update', (payload) => {
+      if (!payload?.refresh) return
+      const incomingUpdatedAt =
+        payload.updatedAt instanceof Date
+          ? payload.updatedAt.getTime()
+          : typeof payload.updatedAt === 'string'
+            ? Date.parse(payload.updatedAt)
+            : payload.updatedAt
+      const currentUpdatedAt = snapshotUpdatedAtRef.current
+      if (Number.isFinite(incomingUpdatedAt) && Number.isFinite(currentUpdatedAt)) {
+        if (incomingUpdatedAt <= currentUpdatedAt) return
+      }
+      refreshSnapshot()
+    })
 
-  //   return () => socket.disconnect()
-  // }, [user])
+    return () => socket.disconnect()
+  }, [user?._id])
 
   useEffect(() => {
     if (didSetInitialPreferences.current) return
