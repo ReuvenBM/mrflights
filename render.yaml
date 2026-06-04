@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: mrflights-frontend
+    runtime: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://mf-be-ohzi.onrender.com/api/*
+      - type: rewrite
+        source: /*
+        destination: /index.html
