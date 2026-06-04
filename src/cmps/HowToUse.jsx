@@ -8,7 +8,7 @@ export function HowToUse() {
       </p>
 
       <ol>
-        <li>Choose your airports, travel dates, passenger count, and trip preferences.</li>
+        <li>Choose your airports, travel dates.</li>
         <li>Add the route to your watchlist.</li>
         <li>mrFlights regularly collects matching flight options and stores snapshots.</li>
         <li>Review your snapshots to compare prices and flight quality over time.</li>
