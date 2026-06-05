@@ -5,6 +5,7 @@ export const AIRPORT_OPTIONS = [
   { code: 'HFA', label: 'Haifa, Israel' },
   { code: 'ETH', label: 'Eilat (Ramon), Israel' },
   { code: 'LCA', label: 'Larnaca, Cyprus' },
+  { code: 'PFO', label: 'Paphos, Cyprus' },
   { code: 'ATH', label: 'Athens, Greece' },
   { code: 'IST', label: 'Istanbul, Turkey' },
   { code: 'SAW', label: 'Istanbul (Sabiha), Turkey' },
