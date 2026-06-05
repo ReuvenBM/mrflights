@@ -3,6 +3,7 @@ import { io } from 'socket.io-client'
 import { dealsService } from '../services/deals.service'
 import { watchItemService } from '../services/watchItem.service'
 import { showErrorMsg, showSuccessMsg } from '../services/event-bus.service'
+import { getUserErrorMessage } from '../services/http.service'
 import { useUser } from '../store/UserContext'
 import { Link } from 'react-router-dom'
 import { SearchPreferencesForm } from '../cmps/SearchPreferencesForm'
@@ -178,7 +179,7 @@ export function HomePage() {
       setStatus(data)
     } catch (err) {
       console.error(err)
-      showErrorMsg(err.message || 'Status error')
+      showErrorMsg(getUserErrorMessage(err, 'Could not load status. Please try again.'))
     } finally {
       setLoadingStatus(false)
     }
@@ -216,7 +217,7 @@ export function HomePage() {
       }
     } catch (err) {
       console.error(err)
-      showErrorMsg(err.message || 'Snapshot error')
+      showErrorMsg(getUserErrorMessage(err, 'Could not load your flight results. Please try again.'))
       return { updatedAt: null, didAdvance: false }
     }
   }
@@ -228,7 +229,7 @@ export function HomePage() {
       setWatchItems(Array.isArray(res?.watchItems) ? res.watchItems : [])
     } catch (err) {
       console.error(err)
-      showErrorMsg(err.message || 'Watch items error')
+      showErrorMsg(getUserErrorMessage(err, 'Could not load your saved flight searches. Please try again.'))
     }
   }
 
@@ -245,6 +246,11 @@ export function HomePage() {
 
   async function onRun() {
     //console.log('onRun clicked, configPayload =', configPayload)
+    const validationMessage = getSearchValidationMessage(configPayload)
+    if (validationMessage) {
+      showErrorMsg(validationMessage)
+      return
+    }
     setRunning(true)
     try {
       const previousSnapshotUpdatedAt = snapshotUpdatedAtRef.current
@@ -260,7 +266,7 @@ export function HomePage() {
       //await refreshSchedule()
     } catch (err) {
       console.error(err)
-      showErrorMsg(err.message || 'Run failed')
+      showErrorMsg(getUserErrorMessage(err, 'Could not start the search. Please check your details and try again.'))
     } finally {
       setRunning(false)
     }
@@ -275,7 +281,7 @@ export function HomePage() {
       await refreshWatchItems()
     } catch (err) {
       console.error(err)
-      showErrorMsg(err.message || 'Delete failed')
+      showErrorMsg(getUserErrorMessage(err, 'Could not delete this saved search. Please try again.'))
     }
   }
 
@@ -290,7 +296,7 @@ export function HomePage() {
       await refreshWatchItems()
     } catch (err) {
       console.error(err)
-      showErrorMsg(err.message || 'Delete failed')
+      showErrorMsg(getUserErrorMessage(err, 'Could not delete these saved searches. Please try again.'))
     }
   }
 
@@ -330,6 +336,18 @@ export function HomePage() {
         maxHours: config.maxHours
       }
     }
+  }
+
+  function getSearchValidationMessage(config) {
+    const hasOrigin = Array.isArray(config.origins) ? config.origins.length > 0 : !!config.origins
+    const hasDest = Array.isArray(config.dests) ? config.dests.length > 0 : !!config.dests
+    const hasDates = Array.isArray(config.dates) ? config.dates.length > 0 : !!config.dates
+
+    if (!hasOrigin && !hasDest) return 'Choose departure and destination airports and try again.'
+    if (!hasOrigin) return 'Choose a departure airport and try again.'
+    if (!hasDest) return 'Choose a destination airport and try again.'
+    if (!hasDates) return 'Choose at least one travel date and try again.'
+    return ''
   }
 
   if (userLoading) {

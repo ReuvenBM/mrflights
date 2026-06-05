@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { userService } from '../services/user.service'
 import { useUser } from '../store/UserContext'
 import { showErrorMsg, showSuccessMsg } from '../services/event-bus.service'
+import { getUserErrorMessage } from '../services/http.service'
 
 export function AuthPage() {
   const { setUser } = useUser()
@@ -26,7 +27,7 @@ export function AuthPage() {
       navigate('/')
     } catch (err) {
       console.error(err)
-      showErrorMsg(err.message || 'Google login failed')
+      showErrorMsg(getUserErrorMessage(err, 'Google login failed. Please try again.'))
     } finally {
       setLoading(false)
     }

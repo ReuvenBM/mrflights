@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useUser } from '../store/UserContext'
 import { userService } from '../services/user.service'
 import { showErrorMsg, showSuccessMsg } from '../services/event-bus.service'
+import { getUserErrorMessage } from '../services/http.service'
 import { Link } from 'react-router-dom'
 
 export function ProfilePage() {
@@ -39,7 +40,7 @@ export function ProfilePage() {
       showSuccessMsg('Profile updated')
     } catch (err) {
       console.error(err)
-      showErrorMsg(err.message || 'Update failed')
+      showErrorMsg(getUserErrorMessage(err, 'Could not update your profile. Please check your details and try again.'))
     } finally {
       setSavingProfile(false)
     }
@@ -51,7 +52,7 @@ export function ProfilePage() {
       showSuccessMsg('Logged out')
     } catch (err) {
       console.error(err)
-      showErrorMsg(err.message || 'Logout failed')
+      showErrorMsg(getUserErrorMessage(err, 'Could not log out. Please try again.'))
     }
   }
 
