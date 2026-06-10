@@ -1081,6 +1081,17 @@ button:disabled {
   background: #fbfdff;
 }
 
+.date-day.is-today {
+  border-color: #2f6bff;
+  box-shadow: inset 0 0 0 1px #2f6bff;
+}
+
+.date-day.is-disabled {
+  background: #f3f6fa;
+  color: #b5c0cc;
+  cursor: not-allowed;
+}
+
 .date-day.is-range {
   background: #eef4ff;
   color: #2f6bff;

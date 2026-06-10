@@ -9,6 +9,14 @@ function toDateKey(date) {
   return date.toISOString().slice(0, 10)
 }
 
+function getTodayDateKey() {
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+  const day = String(today.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 function parseDateKey(dateKey) {
   const [year, month, day] = String(dateKey || '').split('-').map(Number)
   if (!year || !month || !day) return null
@@ -49,6 +57,8 @@ function DateRangePicker({ dateRange, onDateRangeChange, onAddRange }) {
   const endDate = parseDateKey(dateRange.end)
   const startTime = startDate?.getTime()
   const endTime = endDate?.getTime()
+  const todayKey = getTodayDateKey()
+  const todayTime = parseDateKey(todayKey)?.getTime()
   const days = buildCalendarDays(visibleMonth)
   const monthTitle = `${MONTH_LABELS[visibleMonth.getUTCMonth()]} ${visibleMonth.getUTCFullYear()}`
 
@@ -59,6 +69,7 @@ function DateRangePicker({ dateRange, onDateRangeChange, onAddRange }) {
   function selectDate(date) {
     const nextKey = toDateKey(date)
     const nextTime = date.getTime()
+    if (todayTime && nextTime < todayTime) return
 
     if (!dateRange.start || (dateRange.start && dateRange.end)) {
       onDateRangeChange('start', nextKey)
@@ -107,6 +118,8 @@ function DateRangePicker({ dateRange, onDateRangeChange, onAddRange }) {
             const isStart = key === dateRange.start
             const isEnd = key === dateRange.end
             const isInRange = startTime && endTime && time > startTime && time < endTime
+            const isToday = key === todayKey
+            const isPast = todayTime && time < todayTime
 
             return (
               <button
@@ -117,9 +130,12 @@ function DateRangePicker({ dateRange, onDateRangeChange, onAddRange }) {
                   isStart ? 'is-start' : '',
                   isEnd ? 'is-end' : '',
                   isInRange ? 'is-range' : '',
+                  isToday ? 'is-today' : '',
+                  isPast ? 'is-disabled' : '',
                 ].filter(Boolean).join(' ')}
                 key={key}
                 onClick={() => selectDate(date)}
+                disabled={isPast}
               >
                 {date.getUTCDate()}
               </button>
