@@ -119,26 +119,13 @@ export function HomePage() {
     didSetInitialPreferences.current = true
   }, [snapshots])
 
-  function clearSnapshotState() {
-    setSnapshots(null)
-    setWatchItems([])
-    setSnapshotUpdatedAt(null)
-    snapshotUpdatedAtRef.current = null
+  function resetRouteDateForm() {
+    setConfigForm((prev) => ({ ...prev, origins: '', dests: '', dates: [] }))
+    setDateRange({ start: '', end: '' })
   }
 
   function handleConfigChange(ev) {
     const { name, value } = ev.target
-    if (
-      name === 'origins' ||
-      name === 'dests' ||
-      name === 'currency' ||
-      name === 'maxNonstop' ||
-      name === 'maxOnestop' ||
-      name === 'maxHours' ||
-      name === 'targetPrice'
-    ) {
-      clearSnapshotState()
-    }
     setConfigForm((prev) => ({ ...prev, [name]: value }))
   }
 
@@ -259,6 +246,7 @@ export function HomePage() {
       const res = await dealsService.runOnce(watchItemPayload)
       if (res?.ok === false) throw new Error(res.error || 'Run failed')
       if (!res?.runId) throw new Error('Run failed')
+      resetRouteDateForm()
       showSuccessMsg('Run started')
       await refreshStatus()
       await pollForNewerSnapshot(previousSnapshotUpdatedAt)
