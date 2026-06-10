@@ -127,9 +127,6 @@ export function HomePage() {
   function handleConfigChange(ev) {
     const { name, value } = ev.target
     setConfigForm((prev) => ({ ...prev, [name]: value }))
-    if (name === 'dests' && value && snapshots && Object.keys(snapshots).length) {
-      setIsPreferencesOpen(false)
-    }
   }
 
   function onRemoveDate(date) {
