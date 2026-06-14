@@ -1320,6 +1320,60 @@ button:disabled {
   line-height: 1.05;
 }
 
+.snapshot-alertPrice {
+  white-space: nowrap;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(7, 17, 31, 0.44);
+}
+
+.target-price-dialog {
+  width: min(100%, 380px);
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(7, 17, 31, 0.22);
+}
+
+.target-price-dialog h3 {
+  margin: 2px 0 0;
+}
+
+.target-price-dialog label {
+  display: grid;
+  gap: 7px;
+  color: #2f3a4a;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.target-price-dialog input {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  padding: 10px 11px;
+  border: 1px solid #d7e1ea;
+  border-radius: 10px;
+  background: #fff;
+  color: #07111f;
+  font: inherit;
+}
+
+.target-price-dialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .snapshot-minPrice small,
 .snapshot-recommendation small,
 .snapshot-option small {

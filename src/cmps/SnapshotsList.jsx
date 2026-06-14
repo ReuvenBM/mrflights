@@ -212,11 +212,14 @@ export function SnapshotsList({
   snapshots,
   watchItems,
   onDeleteWatchItem,
+  onUpdateTargetPrice,
   onDeleteRoute,
 }) {
   const [openRouteKey, setOpenRouteKey] = useState(null)
   const [deletingRouteKey, setDeletingRouteKey] = useState(null)
   const [deletingWatchItems, setDeletingWatchItems] = useState({})
+  const [editingTargetPrice, setEditingTargetPrice] = useState(null)
+  const [savingTargetPrices, setSavingTargetPrices] = useState({})
 
   const groupedSnapshots = Object.values(snapshots || {}).reduce((acc, snapshot) => {
     const routeKey = `${snapshot.route?.origin}-${snapshot.route?.dest}`
@@ -374,6 +377,9 @@ export function SnapshotsList({
               <div className="snapshots-dates">
                 {orderedRouteSnapshots.map((snapshot) => {
                   const options = Array.isArray(snapshot.options) ? snapshot.options : []
+                  const watchItem = snapshot?.watchItemId
+                    ? watchItemsById[String(snapshot.watchItemId)]
+                    : null
                   const recommendation = getSnapshotRecommendation(snapshot)
                   const recommendationAction = recommendation?.action
                   const recommendationLabel = formatRecommendationAction(recommendationAction)
@@ -407,6 +413,20 @@ export function SnapshotsList({
                               ? `${snapshot.minPrice} ${cheapestOption?.currency ?? ''}`.trim()
                               : 'N/A'}
                           </span>
+
+                          <button
+                            className="snapshot-alertPrice"
+                            type="button"
+                            disabled={!snapshot.watchItemId}
+                            onClick={() => {
+                              setEditingTargetPrice({
+                                watchItemId: snapshot.watchItemId,
+                                value: watchItem?.targetPrice ?? '',
+                              })
+                            }}
+                          >
+                            {watchItem?.targetPrice ? 'Edit alert' : 'Set alert'}
+                          </button>
 
                           <button
                             className="snapshot-deleteBtn"
@@ -492,6 +512,71 @@ export function SnapshotsList({
           </section>
         )
       })}
+      {editingTargetPrice && (
+        <div className="modal-backdrop" role="presentation">
+          <form
+            className="target-price-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Edit target price alert"
+            onSubmit={async (ev) => {
+              ev.preventDefault()
+              const { watchItemId, value } = editingTargetPrice
+              if (!watchItemId || savingTargetPrices[watchItemId]) return
+
+              setSavingTargetPrices((prev) => ({
+                ...prev,
+                [watchItemId]: true,
+              }))
+
+              try {
+                await onUpdateTargetPrice(watchItemId, value)
+                setEditingTargetPrice(null)
+              } finally {
+                setSavingTargetPrices((prev) => {
+                  const next = { ...prev }
+                  delete next[watchItemId]
+                  return next
+                })
+              }
+            }}
+          >
+            <div>
+              <span className="panel-kicker">Price alert</span>
+              <h3>Target price</h3>
+            </div>
+            <label>
+              <span>Notify me when price drops below</span>
+              <input
+                type="number"
+                min="0"
+                value={editingTargetPrice.value}
+                onChange={(ev) => {
+                  const { value } = ev.target
+                  setEditingTargetPrice((prev) => ({ ...prev, value }))
+                }}
+                autoFocus
+              />
+            </label>
+            <div className="target-price-dialogActions">
+              <button
+                type="button"
+                onClick={() => setEditingTargetPrice(null)}
+                disabled={savingTargetPrices[editingTargetPrice.watchItemId]}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="primary-action"
+                disabled={savingTargetPrices[editingTargetPrice.watchItemId]}
+              >
+                {savingTargetPrices[editingTargetPrice.watchItemId] ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </section>
   )
 }

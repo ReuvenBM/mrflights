@@ -120,7 +120,7 @@ export function HomePage() {
   }, [snapshots])
 
   function resetRouteDateForm() {
-    setConfigForm((prev) => ({ ...prev, origins: '', dests: '', dates: [] }))
+    setConfigForm((prev) => ({ ...prev, origins: '', dests: '', dates: [], targetPrice: '' }))
     setDateRange({ start: '', end: '' })
   }
 
@@ -273,6 +273,20 @@ export function HomePage() {
     }
   }
 
+  async function onUpdateTargetPrice(watchItemId, targetPrice) {
+    if (!watchItemId) return
+    try {
+      const res = await watchItemService.save({ _id: watchItemId, targetPrice })
+      if (res?.ok === false) throw new Error(res.error || 'Update failed')
+      showSuccessMsg('Target price updated')
+      await refreshWatchItems()
+    } catch (err) {
+      console.error(err)
+      showErrorMsg(getUserErrorMessage(err, 'Could not update this target price. Please try again.'))
+      throw err
+    }
+  }
+
   async function onDeleteRoute(watchItemIds) {
     const ids = (Array.isArray(watchItemIds) ? watchItemIds : []).filter(Boolean)
     if (!ids.length) return
@@ -405,6 +419,7 @@ export function HomePage() {
         snapshots={snapshots}
         watchItems={watchItems}
         onDeleteWatchItem={onDeleteWatchItem}
+        onUpdateTargetPrice={onUpdateTargetPrice}
         onDeleteRoute={onDeleteRoute}
       />
     </main>
