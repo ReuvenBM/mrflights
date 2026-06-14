@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { AIRPORT_OPTIONS, buildAirportMap } from '../services/airport.service'
 import { buildGoogleFlightsLink } from '../services/deals.utils'
 import { airlineNames } from '../services/airline-names'
@@ -220,6 +220,7 @@ export function SnapshotsList({
   const [deletingWatchItems, setDeletingWatchItems] = useState({})
   const [editingTargetPrice, setEditingTargetPrice] = useState(null)
   const [savingTargetPrices, setSavingTargetPrices] = useState({})
+  const routeRefs = useRef({})
 
   const groupedSnapshots = Object.values(snapshots || {}).reduce((acc, snapshot) => {
     const routeKey = `${snapshot.route?.origin}-${snapshot.route?.dest}`
@@ -267,6 +268,16 @@ export function SnapshotsList({
     }
   }
 
+  const toggleRoute = (routeKey, isOpen) => {
+    setOpenRouteKey(isOpen ? null : routeKey)
+
+    if (!isOpen) {
+      requestAnimationFrame(() => {
+        routeRefs.current[routeKey]?.scrollIntoView({ block: 'start' })
+      })
+    }
+  }
+
   if (!snapshots || !Object.keys(snapshots).length) {
     return (
       <section className="panel snapshots-empty">
@@ -303,16 +314,23 @@ export function SnapshotsList({
         }, null)
 
         return (
-          <section className="panel route-panel" key={routeKey}>
+          <section
+            className="panel route-panel"
+            key={routeKey}
+            ref={(el) => {
+              if (el) routeRefs.current[routeKey] = el
+              else delete routeRefs.current[routeKey]
+            }}
+          >
             <div
               className="snapshots-routeHeader"
               role="button"
               tabIndex={0}
-              onClick={() => setOpenRouteKey(isOpen ? null : routeKey)}
+              onClick={() => toggleRoute(routeKey, isOpen)}
               onKeyDown={(ev) => {
                 if (ev.key !== 'Enter' && ev.key !== ' ') return
                 ev.preventDefault()
-                setOpenRouteKey(isOpen ? null : routeKey)
+                toggleRoute(routeKey, isOpen)
               }}
             >
               <div className="snapshots-routeInfo">
