@@ -146,11 +146,11 @@ function DateRangePicker({ dateRange, onDateRangeChange, onAddRange }) {
 
       <div className="date-rangeSummary" aria-label="Selected travel date range">
         <div className="date-summaryItem">
-          <span>Start</span>
+          <span>Earliest departure</span>
           <strong>{dateRange.start ? formatDateLabel(dateRange.start) : 'Select start'}</strong>
         </div>
         <div className="date-summaryItem">
-          <span>End</span>
+          <span>Latest departure</span>
           <strong>{dateRange.end ? formatDateLabel(dateRange.end) : 'Select end'}</strong>
         </div>
         {(dateRange.start || dateRange.end) && (
@@ -378,7 +378,8 @@ export function SearchPreferencesForm({
 
           <div className="date-panel">
             <div className="date-panelHeader">
-              <span>Choose travel dates</span>
+              <span>Choose departure dates</span>
+              <p className="hint">This range tracks departure dates only, not a return-date selection.</p>
             </div>
             <DateRangePicker
               dateRange={dateRange}
