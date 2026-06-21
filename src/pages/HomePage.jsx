@@ -34,6 +34,7 @@ export function HomePage() {
     dests: '',
     dates: [],
     currency: '',
+    maxStops: '',
     maxNonstop: '',
     maxOnestop: '',
     maxHours: '',
@@ -314,6 +315,7 @@ export function HomePage() {
       dests: parseList(form.dests),
       dates: Array.isArray(form.dates) ? form.dates : parseList(form.dates),
       currency: form.currency || 'USD',
+      maxStops: form.maxStops === '' ? null : toNum(form.maxStops),
       maxNonstop: toNum(form.maxNonstop),
       maxOnestop: toNum(form.maxOnestop),
       maxHours: toNum(form.maxHours),
@@ -333,6 +335,7 @@ export function HomePage() {
       targetPrice: config.targetPrice,
       filters: {
         currency: config.currency,
+        maxStops: config.maxStops,
         maxNonstop: config.maxNonstop,
         maxOnestop: config.maxOnestop,
         maxHours: config.maxHours

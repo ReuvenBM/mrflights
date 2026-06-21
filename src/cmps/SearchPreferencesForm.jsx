@@ -420,6 +420,15 @@ export function SearchPreferencesForm({
 
           <div className="search-grid">
             <label className="field-card">
+              <span>Stops</span>
+              <select name="maxStops" value={configForm.maxStops} onChange={onChange}>
+                <option value="">Any stops</option>
+                <option value="0">Direct only</option>
+                <option value="1">Up to 1 stop</option>
+              </select>
+            </label>
+
+            <label className="field-card">
               <span>Notify me when price drops below:</span>
               <input name="targetPrice" type="number" min="0" value={configForm.targetPrice} onChange={onChange} />
             </label>
