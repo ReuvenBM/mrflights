@@ -1171,6 +1171,38 @@ button:disabled {
   font-weight: 800;
 }
 
+.snapshots-controls {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(130px, 180px) minmax(130px, 180px);
+  gap: 10px;
+  align-items: end;
+  padding: 14px;
+  border: 1px solid #e0e8f2;
+  border-radius: 16px;
+  background: #fbfdff;
+}
+
+.snapshots-controls label {
+  display: grid;
+  gap: 6px;
+  color: #657386;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.snapshots-controls input,
+.snapshots-controls select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 10px;
+  border: 1px solid #d7e1ea;
+  border-radius: 10px;
+  background: #fff;
+  color: #07111f;
+  font: inherit;
+}
+
 .snapshots-empty {
   display: grid;
   gap: 6px;
@@ -1477,6 +1509,10 @@ button:disabled {
   }
 
   .custom-datePicker {
+    grid-template-columns: 1fr;
+  }
+
+  .snapshots-controls {
     grid-template-columns: 1fr;
   }
 

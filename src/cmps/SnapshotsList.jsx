@@ -77,6 +77,16 @@ const ROUTE_RECOMMENDATION_TEXT = {
   WAIT: 'Wait',
 }
 
+const SORT_FIELDS = {
+  NAME: 'name',
+  DATE: 'date',
+}
+
+const SORT_DIRECTIONS = {
+  ASC: 'asc',
+  DESC: 'desc',
+}
+
 const formatRecommendationAction = (action) => {
   const key = String(action || '').trim().toUpperCase()
   if (!key) return ''
@@ -93,6 +103,29 @@ const getRecommendationClass = (action) => {
   const key = String(action || '').trim().toLowerCase().replaceAll('_', '-')
   return key ? ` recommendation-${key}` : ''
 }
+
+const getRouteName = (routeSnapshots) => {
+  const route = routeSnapshots[0]?.route || {}
+  return `${formatAirportLabel(route.origin)} ${formatAirportLabel(route.dest)}`.trim()
+}
+
+const getRouteFilterText = (routeKey, routeSnapshots) => {
+  const route = routeSnapshots[0]?.route || {}
+  return [
+    routeKey,
+    route.origin,
+    route.dest,
+    formatAirportLabel(route.origin),
+    formatAirportLabel(route.dest),
+  ].join(' ').toLowerCase()
+}
+
+const getRouteFirstDate = (routeSnapshots) => (
+  routeSnapshots
+    .map((snapshot) => String(snapshot.date || ''))
+    .filter(Boolean)
+    .sort()[0] || ''
+)
 
 const formatCarriers = (carriers, fallback = '—') => {
   if (!carriers) return fallback
@@ -220,6 +253,9 @@ export function SnapshotsList({
   const [deletingWatchItems, setDeletingWatchItems] = useState({})
   const [editingTargetPrice, setEditingTargetPrice] = useState(null)
   const [savingTargetPrices, setSavingTargetPrices] = useState({})
+  const [routeFilter, setRouteFilter] = useState('')
+  const [sortField, setSortField] = useState(SORT_FIELDS.NAME)
+  const [sortDirection, setSortDirection] = useState(SORT_DIRECTIONS.ASC)
   const routeRefs = useRef({})
 
   const groupedSnapshots = Object.values(snapshots || {}).reduce((acc, snapshot) => {
@@ -278,6 +314,22 @@ export function SnapshotsList({
     }
   }
 
+  const routeEntries = Object.entries(groupedSnapshots)
+  const normalizedRouteFilter = routeFilter.trim().toLowerCase()
+  const visibleRouteEntries = routeEntries
+    .filter(([routeKey, routeSnapshots]) => {
+      if (!normalizedRouteFilter) return true
+      return getRouteFilterText(routeKey, routeSnapshots).includes(normalizedRouteFilter)
+    })
+    .sort(([, aSnapshots], [, bSnapshots]) => {
+      const direction = sortDirection === SORT_DIRECTIONS.DESC ? -1 : 1
+      const aValue = sortField === SORT_FIELDS.DATE ? getRouteFirstDate(aSnapshots) : getRouteName(aSnapshots)
+      const bValue = sortField === SORT_FIELDS.DATE ? getRouteFirstDate(bSnapshots) : getRouteName(bSnapshots)
+      return String(aValue).localeCompare(String(bValue)) * direction
+    })
+  const routeCount = routeEntries.length
+  const visibleRouteCount = visibleRouteEntries.length
+
   if (!snapshots || !Object.keys(snapshots).length) {
     return (
       <section className="panel snapshots-empty">
@@ -295,11 +347,52 @@ export function SnapshotsList({
           <span className="panel-kicker">Results</span>
           <h2>Tracked routes</h2>
         </div>
-        <span>{Object.keys(groupedSnapshots).length} route{Object.keys(groupedSnapshots).length === 1 ? '' : 's'}</span>
+        <span>
+          {visibleRouteCount === routeCount
+            ? `${routeCount} route${routeCount === 1 ? '' : 's'}`
+            : `${visibleRouteCount} of ${routeCount} routes`}
+        </span>
       </div>
 
-      {Object.entries(groupedSnapshots).map(([routeKey, routeSnapshots]) => {
-        const orderedRouteSnapshots = [...routeSnapshots].sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')))
+      <div className="snapshots-controls">
+        <label>
+          <span>Filter</span>
+          <input
+            type="search"
+            value={routeFilter}
+            onChange={(ev) => setRouteFilter(ev.target.value)}
+            placeholder="Route or destination"
+          />
+        </label>
+        <label>
+          <span>Sort by</span>
+          <select value={sortField} onChange={(ev) => setSortField(ev.target.value)}>
+            <option value={SORT_FIELDS.NAME}>Name</option>
+            <option value={SORT_FIELDS.DATE}>Flight date</option>
+          </select>
+        </label>
+        <label>
+          <span>Direction</span>
+          <select value={sortDirection} onChange={(ev) => setSortDirection(ev.target.value)}>
+            <option value={SORT_DIRECTIONS.ASC}>Ascending</option>
+            <option value={SORT_DIRECTIONS.DESC}>Descending</option>
+          </select>
+        </label>
+      </div>
+
+      {visibleRouteEntries.length === 0 && (
+        <section className="panel snapshots-empty">
+          <span className="panel-kicker">Results</span>
+          <h3>No matching routes</h3>
+          <p>Adjust the filter to show tracked routes.</p>
+        </section>
+      )}
+
+      {visibleRouteEntries.map(([routeKey, routeSnapshots]) => {
+        const dateDirection = sortField === SORT_FIELDS.DATE && sortDirection === SORT_DIRECTIONS.DESC ? -1 : 1
+        const orderedRouteSnapshots = [...routeSnapshots].sort((a, b) => (
+          String(a.date || '').localeCompare(String(b.date || '')) * dateDirection
+        ))
         const dates = routeSnapshots.map((s) => s.date)
         const dateItems = buildRouteDateItems(dates)
         const visibleItems = dateItems.slice(0, 2)
